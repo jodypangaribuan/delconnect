@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "1041754221282",
+    "project_id": "delconnectbase",
+    "storage_bucket": "delconnectbase.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1041754221282:android:17c77550f9c0e4f29e8cbb",
+        "android_client_info": {
+          "package_name": "com.example.chat_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYSOcuvKQ4-zGAvF9raYiVwIJySqwl34U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1041754221282:android:24511d8c65cef0f19e8cbb",
+        "android_client_info": {
+          "package_name": "com.example.delconnect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYSOcuvKQ4-zGAvF9raYiVwIJySqwl34U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1041754221282:android:ea4f576e0a10ec559e8cbb",
+        "android_client_info": {
+          "package_name": "wadaw.com"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYSOcuvKQ4-zGAvF9raYiVwIJySqwl34U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
