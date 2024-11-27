@@ -28,56 +28,96 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         fontFamily: '.SF Pro Text',
         colorScheme: ColorScheme.fromSeed(
-          seedColor: AppTheme.primary,
-          background: AppTheme.background,
-          surface: AppTheme.surface,
+          seedColor: AppTheme.lightPrimary,
+          background: AppTheme.lightBackground,
+          surface: AppTheme.lightSurface,
         ),
-        scaffoldBackgroundColor: AppTheme.background,
-        textTheme: TextTheme(
-          headlineLarge: const TextStyle(
+        scaffoldBackgroundColor: AppTheme.lightBackground,
+        textTheme: const TextTheme(
+          headlineLarge: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,
             letterSpacing: -1,
-            color: AppTheme.text,
+            color: AppTheme.lightText,
           ),
           titleLarge: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
             letterSpacing: -0.5,
-            color: AppTheme.text.withOpacity(0.9),
+            color: AppTheme.lightText,
           ),
           bodyLarge: TextStyle(
             fontSize: 16,
-            color: AppTheme.text.withOpacity(0.8),
+            color: AppTheme.lightTextSecondary,
             letterSpacing: -0.2,
           ),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: AppTheme.surface,
+          fillColor: AppTheme.lightSurface,
           border: OutlineInputBorder(
-            borderRadius: AppTheme.borderRadius,
+            borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: AppTheme.borderRadius,
-            borderSide: BorderSide(color: Colors.grey[200]!),
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppTheme.lightBorder),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: AppTheme.borderRadius,
-            borderSide: BorderSide(color: AppTheme.primary.withOpacity(0.5)),
+            borderRadius: BorderRadius.circular(12),
+            borderSide:
+                BorderSide(color: AppTheme.lightPrimary.withOpacity(0.5)),
           ),
-          labelStyle: TextStyle(color: AppTheme.text.withOpacity(0.7)),
-          prefixIconColor: AppTheme.textSecondary,
+          labelStyle: const TextStyle(color: AppTheme.lightTextSecondary),
+          prefixIconColor: AppTheme.lightTextSecondary,
         ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            elevation: 0,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            backgroundColor: AppTheme.primary,
-            shape: RoundedRectangleBorder(borderRadius: AppTheme.buttonRadius),
-            foregroundColor: Colors.white,
+      ),
+      darkTheme: ThemeData(
+        fontFamily: '.SF Pro Text',
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppTheme.darkPrimary,
+          background: AppTheme.darkBackground,
+          surface: AppTheme.darkSurface,
+          brightness: Brightness.dark,
+        ),
+        scaffoldBackgroundColor: AppTheme.darkBackground,
+        textTheme: const TextTheme(
+          headlineLarge: TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            letterSpacing: -1,
+            color: AppTheme.darkText,
           ),
+          titleLarge: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.5,
+            color: AppTheme.darkText,
+          ),
+          bodyLarge: TextStyle(
+            fontSize: 16,
+            color: AppTheme.darkTextSecondary,
+            letterSpacing: -0.2,
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: AppTheme.darkSurface,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppTheme.darkBorder),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide:
+                BorderSide(color: AppTheme.darkPrimary.withOpacity(0.5)),
+          ),
+          labelStyle: const TextStyle(color: AppTheme.darkTextSecondary),
+          prefixIconColor: AppTheme.darkTextSecondary,
         ),
       ),
       initialRoute: AppRoutes.splash,

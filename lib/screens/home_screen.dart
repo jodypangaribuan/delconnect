@@ -14,36 +14,45 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor =
+        isDark ? AppTheme.darkBackground : AppTheme.lightBackground;
+    final surfaceColor = isDark ? AppTheme.darkSurface : AppTheme.lightSurface;
+    final textColor = isDark ? AppTheme.darkText : AppTheme.lightText;
+    final textSecondaryColor =
+        isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary;
+    final primary = isDark ? AppTheme.darkPrimary : AppTheme.lightPrimary;
+
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: AppTheme.surface,
+        backgroundColor: surfaceColor,
         elevation: 0,
         title: ShaderMask(
-          shaderCallback: (bounds) => const LinearGradient(
-            colors: AppTheme.gradientPrimary,
+          shaderCallback: (bounds) => LinearGradient(
+            colors: [primary, primary.withOpacity(0.8)],
           ).createShader(bounds),
-          child: const Text(
+          child: Text(
             'DelConnect',
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: textColor,
             ),
           ),
         ),
         actions: [
           IconButton(
-            icon:
-                const Icon(CupertinoIcons.chat_bubble, color: AppTheme.primary),
+            icon: Icon(CupertinoIcons.chat_bubble, color: primary),
             onPressed: () {},
           ),
           Container(
             margin: const EdgeInsets.only(right: 8),
             decoration: BoxDecoration(
-              gradient:
-                  const LinearGradient(colors: AppTheme.gradientSecondary),
-              borderRadius: AppTheme.borderRadius,
+              gradient: LinearGradient(
+                colors: [primary, primary.withOpacity(0.8)],
+              ),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: IconButton(
               icon: const Icon(CupertinoIcons.add, color: Colors.white),
@@ -55,26 +64,24 @@ class _HomeScreenState extends State<HomeScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadius),
-            color: AppTheme.surface,
+          Container(
+            decoration:
+                isDark ? AppTheme.elevatedCardDark : AppTheme.elevatedCard,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
                   CircleAvatar(
                     radius: 24,
-                    backgroundColor: AppTheme.primary.withOpacity(0.1),
-                    child: const Icon(CupertinoIcons.person,
-                        color: AppTheme.primary),
+                    backgroundColor: primary.withOpacity(0.1),
+                    child: Icon(CupertinoIcons.person, color: primary),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       "What's on your mind?",
                       style: TextStyle(
-                        color: AppTheme.textSecondary,
+                        color: textSecondaryColor,
                         fontSize: 16,
                       ),
                     ),
@@ -84,12 +91,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Coming Soon',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 17,
-              color: AppTheme.textSecondary,
+              color: textSecondaryColor,
             ),
           ),
         ],
@@ -97,21 +104,21 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: NavigationBar(
         elevation: 0,
         height: 80,
-        backgroundColor: AppTheme.surface,
+        backgroundColor: surfaceColor,
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) =>
             setState(() => _selectedIndex = index),
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(CupertinoIcons.home),
+            icon: Icon(CupertinoIcons.home, color: textSecondaryColor),
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(CupertinoIcons.search),
+            icon: Icon(CupertinoIcons.search, color: textSecondaryColor),
             label: 'Search',
           ),
           NavigationDestination(
-            icon: Icon(CupertinoIcons.person),
+            icon: Icon(CupertinoIcons.person, color: textSecondaryColor),
             label: 'Profile',
           ),
         ],
