@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,18 +16,33 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
+
+    // Optimize system UI
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+      ),
+    );
+
+    // Initialize animation
     _controller = AnimationController(
-      duration: const Duration(seconds: 2),
+      duration: const Duration(milliseconds: 1500), // Reduced duration
       vsync: this,
     );
+
     _animation = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeIn,
+      curve: Curves.easeOut, // Changed curve for smoother animation
     );
+
+    // Start animation
     _controller.forward();
 
-    Future.delayed(const Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, '/login');
+    // Navigate after animation
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        Navigator.pushReplacementNamed(context, '/login');
+      }
     });
   }
 
@@ -39,30 +55,68 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primary,
-      body: Center(
-        child: FadeTransition(
-          opacity: _animation,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.connect_without_contact,
-                size: 100,
-                color: Theme.of(context).colorScheme.onPrimary,
+      backgroundColor: Colors.white,
+      body: AnimatedBuilder(
+        animation: _animation,
+        builder: (context, child) {
+          return Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  Colors.white,
+                ],
               ),
-              const SizedBox(height: 20),
-              Text(
-                'DelConnect',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, -0.5),
+                      end: Offset.zero,
+                    ).animate(CurvedAnimation(
+                      parent: _controller,
+                      curve: Curves.easeOut,
+                    )),
+                    child: Icon(
+                      Icons.chat_bubble_outline_rounded,
+                      size: 100,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  FadeTransition(
+                    opacity: _animation,
+                    child: Column(
+                      children: [
+                        Text(
+                          'DelConnect',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Connect & Share Moments',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }

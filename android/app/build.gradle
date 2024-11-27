@@ -31,6 +31,9 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        minSdkVersion 23
+        multiDexEnabled true
+        targetSdkVersion flutter.targetSdkVersion
     }
 
     buildTypes {
@@ -44,4 +47,10 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    implementation 'com.google.android.gms:play-services-auth:20.7.0'
+    implementation 'androidx.multidex:multidex:2.0.1'
+    implementation 'com.android.support:multidex:1.0.3'
 }
