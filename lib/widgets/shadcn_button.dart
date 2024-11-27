@@ -25,7 +25,7 @@ class ShadcnButton extends StatelessWidget {
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: isPrimary
-              ? (isDark ? AppTheme.darkPrimary : AppTheme.lightPrimary)
+              ? AppTheme.primaryBlue
               : (isDark ? AppTheme.darkSurface : AppTheme.lightSurface),
           foregroundColor: isPrimary
               ? Colors.white

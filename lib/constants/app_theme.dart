@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const lightPrimary = Color(0xFF3B82F6); // Blue-500
+  static const Color lightPrimary = primaryBlue;
   static const lightAccent = Color(0xFF60A5FA); // Blue-400
   static const lightBackground = Color(0xFFFFFFFF);
   static const lightSurface = Color(0xFFF8FAFC); // Slate-50
@@ -9,13 +9,13 @@ class AppTheme {
   static const lightTextSecondary = Color(0xFF64748B); // Slate-500
   static const lightBorder = Color(0xFFE2E8F0); // Slate-200
 
-  static const darkPrimary = Color(0xFF60A5FA); // Blue-400
-  static const darkAccent = Color(0xFF3B82F6); // Blue-500
-  static const darkBackground = Color(0xFF0F172A); // Slate-900
-  static const darkSurface = Color(0xFF1E293B); // Slate-800
-  static const darkText = Color(0xFFF8FAFC); // Slate-50
-  static const darkTextSecondary = Color(0xFF94A3B8); // Slate-400
-  static const darkBorder = Color(0xFF334155); // Slate-700
+  static const Color darkPrimary = primaryBlue;
+  static const darkBackground = Color(0xFF121212);
+  static const darkSurface = Color(0xFF1E1E1E);
+  static const darkText = Color(0xFFE5E5E5);
+  static const darkTextSecondary = Color(0xFF94A3B8);
+  static const darkBorder = Color(0xFF2D2D2D);
+  static const darkInput = Color(0xFF262626);
 
   static const pastelBlue = Color(0xFFBFDBFE); // Blue-200
   static const pastelIndigo = Color(0xFFC7D2FE); // Indigo-200
@@ -26,10 +26,12 @@ class AppTheme {
     Color(0xFFDBEAFE), // Blue-100
   ];
 
-  static const gradientDark = [
-    Color(0xFF1E293B), // Slate-800
-    Color(0xFF0F172A), // Slate-900
+  static final gradientDark = [
+    const Color(0xFF121212),
+    const Color(0xFF1E1E1E),
   ];
+
+  static const Color primaryBlue = Color(0xFF107CC4);
 
   static final elevatedCard = BoxDecoration(
     color: lightBackground,
