@@ -78,6 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
         AppLogger.log('Google Sign In cancelled by user');
         return;
       }
+
       AppLogger.log('Google Sign In successful', googleUser.email);
 
       if (!mounted) {
@@ -95,6 +96,25 @@ class _LoginScreenState extends State<LoginScreen> {
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
+
+      // Try to fetch existing user before signing in
+      try {
+        final signInMethods = await FirebaseAuth.instance
+            .fetchSignInMethodsForEmail(googleUser.email);
+        if (signInMethods.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text(
+                  'Akun Gmail belum terdaftar. Silakan daftar terlebih dahulu.'),
+              backgroundColor: Colors.red,
+            ));
+          }
+          return;
+        }
+      } catch (e) {
+        AppLogger.error('Error checking existing user', e);
+        return;
+      }
 
       final userCredential = await FirebaseAuth.instance
           .signInWithCredential(credential)

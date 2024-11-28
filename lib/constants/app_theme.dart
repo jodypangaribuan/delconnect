@@ -76,4 +76,18 @@ class AppTheme {
     fontWeight: FontWeight.w500,
     letterSpacing: 0.1,
   );
+
+  static final ThemeData lightTheme = ThemeData(
+    brightness: Brightness.light,
+    primaryColor: lightPrimary,
+    scaffoldBackgroundColor: lightBackground,
+    // ...add other light theme configurations
+  );
+
+  static final ThemeData darkTheme = ThemeData(
+    brightness: Brightness.dark,
+    primaryColor: darkPrimary,
+    scaffoldBackgroundColor: darkBackground,
+    // ...add other dark theme configurations
+  );
 }
