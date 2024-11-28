@@ -1,12 +1,14 @@
 import 'dart:async';
+import 'dart:ui'; // Add this import at the top
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import '../routes/app_routes.dart';
 import '../utils/logger.dart';
 import '../widgets/shadcn_button.dart';
-import '../constants/app_theme.dart'; // Add this import
+import '../constants/app_theme.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -22,6 +24,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  final double _indicatorExtent = 0;
 
   Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
@@ -157,7 +160,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           (route) => false,
         );
       }
-    } catch (e, stack) {
+    } catch (e) {
       AppLogger.log('Sign Up error occurred', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -174,15 +177,96 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  void _resetForm() {
+    _formKey.currentState?.reset();
+    _firstNameController.clear();
+    _lastNameController.clear();
+    _emailController.clear();
+    _passwordController.clear();
+    // Clear any error messages by removing the SnackBar
+    ScaffoldMessenger.of(context).clearSnackBars();
+  }
+
+  Future<void> _handleRefresh() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (mounted) {
+      setState(() {
+        _resetForm();
+      });
+
+      showGeneralDialog(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: '',
+        barrierColor: Colors.black45,
+        transitionDuration: const Duration(milliseconds: 150),
+        pageBuilder: (context, anim1, anim2) => Container(),
+        transitionBuilder: (context, anim1, anim2, child) {
+          return FadeTransition(
+            opacity: anim1,
+            child: ScaleTransition(
+              scale: CurvedAnimation(
+                parent: anim1,
+                curve: Curves.easeOutBack,
+              ),
+              child: AlertDialog(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                content: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TweenAnimationBuilder(
+                        tween: Tween<double>(begin: 0, end: 1),
+                        duration: const Duration(milliseconds: 600),
+                        builder: (context, value, child) {
+                          return Transform.rotate(
+                            angle: value * 2 * 3.14,
+                            child: const Icon(
+                              Icons.refresh_rounded,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Halaman disegarkan',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              ),
+            ),
+          );
+        },
+      );
+
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
 
     return GestureDetector(
-      onTap: () {
-        // Remove focus from any text field when tapping outside
-        FocusScope.of(context).unfocus();
-      },
+      onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor:
             isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
@@ -199,431 +283,453 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
             child: SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 20),
-                      Center(
-                        child: Image.asset(
-                          'assets/logo.png',
-                          height: 100,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container(
+              child: LiquidPullToRefresh(
+                onRefresh: _handleRefresh,
+                color: isDark
+                    ? AppTheme.darkBorder
+                    : AppTheme.primaryBlue.withOpacity(0.1),
+                backgroundColor:
+                    isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
+                height: 100,
+                animSpeedFactor: 2,
+                showChildOpacityTransition: false,
+                springAnimationDurationInMilliseconds: 800,
+                borderWidth: 2,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(24.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 20),
+                        Center(
+                          child: Image.asset(
+                            'assets/logo.png',
                             height: 100,
-                            width: 100,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(Icons.apartment_rounded,
-                                size: 50, color: Colors.grey[400]),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Gabung DelConnect, Yuk!',
-                        style: AppTheme.textStyleHeading.copyWith(
-                          color:
-                              isDark ? AppTheme.darkText : AppTheme.lightText,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Buat akunmu dan mulai terhubung dengan teman-teman kampus.',
-                        style: AppTheme.textStyleSubheading.copyWith(
-                          color: isDark
-                              ? AppTheme.darkTextSecondary
-                              : AppTheme.lightTextSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller:
-                                  _firstNameController, // Add this controller to class
-                              decoration: InputDecoration(
-                                labelText: 'Nama Depan',
-                                hintText: 'Jody',
-                                filled: true,
-                                fillColor:
-                                    isDark ? AppTheme.darkInput : Colors.white,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: isDark
-                                        ? AppTheme.darkBorder
-                                        : Colors.grey[300]!,
-                                    width: 1,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
-                                ),
-                                floatingLabelStyle: TextStyle(
-                                  color: isDark
-                                      ? AppTheme.darkTextSecondary
-                                      : Colors.grey[700],
-                                  fontFamily: 'Inter',
-                                ),
-                                contentPadding: const EdgeInsets.all(16),
-                                labelStyle: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: isDark
-                                      ? AppTheme.darkTextSecondary
-                                      : Colors.grey[700],
-                                ),
-                                hintStyle: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w400,
-                                  color: isDark
-                                      ? AppTheme.darkTextSecondary
-                                      : const Color(0xFF64748B),
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.person_outline,
-                                  color: isDark
-                                      ? AppTheme.darkTextSecondary
-                                      : const Color(0xFF64748B),
-                                  size: 20,
-                                ),
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                              height: 100,
+                              width: 100,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: BorderRadius.circular(8),
                               ),
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: isDark
-                                    ? AppTheme.darkText
-                                    : Colors.grey[700],
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Nama depan wajib diisi';
-                                }
-                                if (value.length < 2) {
-                                  return 'Minimal 2 karakter';
-                                }
-                                return null;
-                              },
+                              child: Icon(Icons.apartment_rounded,
+                                  size: 50, color: Colors.grey[400]),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextFormField(
-                              controller:
-                                  _lastNameController, // Add this controller to class
-                              decoration: InputDecoration(
-                                labelText: 'Nama Belakang',
-                                hintText: 'Pangaribuan',
-                                filled: true,
-                                fillColor:
-                                    isDark ? AppTheme.darkInput : Colors.white,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: isDark
-                                        ? AppTheme.darkBorder
-                                        : Colors.grey[300]!,
-                                    width: 1,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
-                                ),
-                                floatingLabelStyle: TextStyle(
-                                  color: isDark
-                                      ? AppTheme.darkTextSecondary
-                                      : Colors.grey[700],
-                                  fontFamily: 'Inter',
-                                ),
-                                contentPadding: const EdgeInsets.all(16),
-                                labelStyle: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: isDark
-                                      ? AppTheme.darkTextSecondary
-                                      : Colors.grey[700],
-                                ),
-                                hintStyle: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w400,
-                                  color: isDark
-                                      ? AppTheme.darkTextSecondary
-                                      : const Color(0xFF64748B),
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.person_outline,
-                                  color: isDark
-                                      ? AppTheme.darkTextSecondary
-                                      : const Color(0xFF64748B),
-                                  size: 20,
-                                ),
-                              ),
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: isDark
-                                    ? AppTheme.darkText
-                                    : Colors.grey[700],
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Nama belakang wajib diisi';
-                                }
-                                if (value.length < 2) {
-                                  return 'Minimal 2 karakter';
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        controller: _emailController,
-                        decoration: InputDecoration(
-                          labelText: 'Email',
-                          hintText: 'emailkamu@student.del.ac.id',
-                          filled: true,
-                          fillColor: isDark ? AppTheme.darkInput : Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: isDark
-                                  ? AppTheme.darkBorder
-                                  : Colors.grey[300]!,
-                              width: 1,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          floatingLabelStyle: TextStyle(
-                            color: isDark
-                                ? AppTheme.darkTextSecondary
-                                : Colors.grey[700],
-                            fontFamily: 'Inter',
-                          ),
-                          contentPadding: const EdgeInsets.all(16),
-                          labelStyle: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: isDark
-                                ? AppTheme.darkTextSecondary
-                                : Colors.grey[700],
-                          ),
-                          hintStyle: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                            color: isDark
-                                ? AppTheme.darkTextSecondary
-                                : const Color(0xFF64748B),
-                          ),
-                          prefixIcon: Icon(
-                            Icons.email_outlined,
-                            color: isDark
-                                ? AppTheme.darkTextSecondary
-                                : const Color(0xFF64748B),
-                            size: 20,
                           ),
                         ),
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: isDark ? AppTheme.darkText : Colors.grey[700],
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Email wajib diisi';
-                          }
-                          if (!value.endsWith('@student.del.ac.id')) {
-                            return 'Gunakan email student.del.ac.id';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        decoration: InputDecoration(
-                          labelText: 'Kata Sandi',
-                          hintText: 'Min. 8 karakter',
-                          filled: true,
-                          fillColor: isDark ? AppTheme.darkInput : Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: isDark
-                                  ? AppTheme.darkBorder
-                                  : Colors.grey[300]!,
-                              width: 1,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          floatingLabelStyle: TextStyle(
-                            color: isDark
-                                ? AppTheme.darkTextSecondary
-                                : Colors.grey[700],
-                            fontFamily: 'Inter',
-                          ),
-                          contentPadding: const EdgeInsets.all(16),
-                          labelStyle: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: isDark
-                                ? AppTheme.darkTextSecondary
-                                : Colors.grey[700],
-                          ),
-                          hintStyle: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                            color: isDark
-                                ? AppTheme.darkTextSecondary
-                                : const Color(0xFF64748B),
-                          ),
-                          prefixIcon: Icon(
-                            Icons.lock_outline,
-                            color: isDark
-                                ? AppTheme.darkTextSecondary
-                                : const Color(0xFF64748B),
-                            size: 20,
+                        const SizedBox(height: 20),
+                        Text(
+                          'Gabung DelConnect, Yuk!',
+                          style: AppTheme.textStyleHeading.copyWith(
+                            color:
+                                isDark ? AppTheme.darkText : AppTheme.lightText,
                           ),
                         ),
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: isDark ? AppTheme.darkText : Colors.grey[700],
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Kata sandi wajib diisi';
-                          }
-                          if (value.length < 8) {
-                            return 'Minimal 8 karakter';
-                          }
-                          if (!RegExp(r'[A-Z]').hasMatch(value)) {
-                            return 'Harus mengandung huruf besar';
-                          }
-                          if (!RegExp(r'[0-9]').hasMatch(value)) {
-                            return 'Harus mengandung angka';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      ShadcnButton(
-                        onPressed: _register,
-                        isLoading: _isLoading,
-                        child: const Text('Daftar Sekarang'),
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        children: [
-                          Expanded(child: Divider(color: Colors.grey[300])),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(
-                              'atau',
-                              style: TextStyle(
-                                  color: Colors.grey[500], fontSize: 13),
-                            ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Buat akunmu dan mulai terhubung dengan teman-teman kampus.',
+                          style: AppTheme.textStyleSubheading.copyWith(
+                            color: isDark
+                                ? AppTheme.darkTextSecondary
+                                : AppTheme.lightTextSecondary,
                           ),
-                          Expanded(child: Divider(color: Colors.grey[300])),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      ShadcnButton(
-                        onPressed: _signUpWithGoogle,
-                        isPrimary: false,
-                        isLoading: _isLoading,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        ),
+                        const SizedBox(height: 32),
+                        Row(
                           children: [
-                            Image.network(
-                              'https://www.google.com/favicon.ico',
-                              height: 18,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.g_mobiledata_rounded,
-                                      size: 18),
+                            Expanded(
+                              child: TextFormField(
+                                controller:
+                                    _firstNameController, // Add this controller to class
+                                decoration: InputDecoration(
+                                  labelText: 'Nama Depan',
+                                  hintText: 'Jody',
+                                  filled: true,
+                                  fillColor: isDark
+                                      ? AppTheme.darkInput
+                                      : Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: isDark
+                                          ? AppTheme.darkBorder
+                                          : Colors.grey[300]!,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  floatingLabelStyle: TextStyle(
+                                    color: isDark
+                                        ? AppTheme.darkTextSecondary
+                                        : Colors.grey[700],
+                                    fontFamily: 'Inter',
+                                  ),
+                                  contentPadding: const EdgeInsets.all(16),
+                                  labelStyle: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: isDark
+                                        ? AppTheme.darkTextSecondary
+                                        : Colors.grey[700],
+                                  ),
+                                  hintStyle: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                    color: isDark
+                                        ? AppTheme.darkTextSecondary
+                                        : const Color(0xFF64748B),
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.person_outline,
+                                    color: isDark
+                                        ? AppTheme.darkTextSecondary
+                                        : const Color(0xFF64748B),
+                                    size: 20,
+                                  ),
+                                ),
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDark
+                                      ? AppTheme.darkText
+                                      : Colors.grey[700],
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Nama depan wajib diisi';
+                                  }
+                                  if (value.length < 2) {
+                                    return 'Minimal 2 karakter';
+                                  }
+                                  return null;
+                                },
+                              ),
                             ),
-                            const SizedBox(width: 8),
-                            const Text('Daftar dengan Google'),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextFormField(
+                                controller:
+                                    _lastNameController, // Add this controller to class
+                                decoration: InputDecoration(
+                                  labelText: 'Nama Belakang',
+                                  hintText: 'Pangaribuan',
+                                  filled: true,
+                                  fillColor: isDark
+                                      ? AppTheme.darkInput
+                                      : Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: isDark
+                                          ? AppTheme.darkBorder
+                                          : Colors.grey[300]!,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  floatingLabelStyle: TextStyle(
+                                    color: isDark
+                                        ? AppTheme.darkTextSecondary
+                                        : Colors.grey[700],
+                                    fontFamily: 'Inter',
+                                  ),
+                                  contentPadding: const EdgeInsets.all(16),
+                                  labelStyle: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: isDark
+                                        ? AppTheme.darkTextSecondary
+                                        : Colors.grey[700],
+                                  ),
+                                  hintStyle: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                    color: isDark
+                                        ? AppTheme.darkTextSecondary
+                                        : const Color(0xFF64748B),
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.person_outline,
+                                    color: isDark
+                                        ? AppTheme.darkTextSecondary
+                                        : const Color(0xFF64748B),
+                                    size: 20,
+                                  ),
+                                ),
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDark
+                                      ? AppTheme.darkText
+                                      : Colors.grey[700],
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Nama belakang wajib diisi';
+                                  }
+                                  if (value.length < 2) {
+                                    return 'Minimal 2 karakter';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Sudah memiliki akun? ',
-                            style: TextStyle(
-                              color:
-                                  isDark ? Colors.grey[300] : Colors.grey[600],
-                              fontSize: 15,
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _emailController,
+                          decoration: InputDecoration(
+                            labelText: 'Email',
+                            hintText: 'emailkamu@student.del.ac.id',
+                            filled: true,
+                            fillColor:
+                                isDark ? AppTheme.darkInput : Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
                             ),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            style: TextButton.styleFrom(
-                              foregroundColor: AppTheme.primaryBlue,
-                              padding: EdgeInsets.zero,
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            child: const Text(
-                              'Masuk Sekarang',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: isDark
+                                    ? AppTheme.darkBorder
+                                    : Colors.grey[300]!,
+                                width: 1,
                               ),
                             ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            floatingLabelStyle: TextStyle(
+                              color: isDark
+                                  ? AppTheme.darkTextSecondary
+                                  : Colors.grey[700],
+                              fontFamily: 'Inter',
+                            ),
+                            contentPadding: const EdgeInsets.all(16),
+                            labelStyle: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: isDark
+                                  ? AppTheme.darkTextSecondary
+                                  : Colors.grey[700],
+                            ),
+                            hintStyle: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                              color: isDark
+                                  ? AppTheme.darkTextSecondary
+                                  : const Color(0xFF64748B),
+                            ),
+                            prefixIcon: Icon(
+                              Icons.email_outlined,
+                              color: isDark
+                                  ? AppTheme.darkTextSecondary
+                                  : const Color(0xFF64748B),
+                              size: 20,
+                            ),
                           ),
-                        ],
-                      ),
-                    ],
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color:
+                                isDark ? AppTheme.darkText : Colors.grey[700],
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Email wajib diisi';
+                            }
+                            if (!value.endsWith('@student.del.ac.id')) {
+                              return 'Gunakan email student.del.ac.id';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            labelText: 'Kata Sandi',
+                            hintText: 'Min. 8 karakter',
+                            filled: true,
+                            fillColor:
+                                isDark ? AppTheme.darkInput : Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: isDark
+                                    ? AppTheme.darkBorder
+                                    : Colors.grey[300]!,
+                                width: 1,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            floatingLabelStyle: TextStyle(
+                              color: isDark
+                                  ? AppTheme.darkTextSecondary
+                                  : Colors.grey[700],
+                              fontFamily: 'Inter',
+                            ),
+                            contentPadding: const EdgeInsets.all(16),
+                            labelStyle: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: isDark
+                                  ? AppTheme.darkTextSecondary
+                                  : Colors.grey[700],
+                            ),
+                            hintStyle: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                              color: isDark
+                                  ? AppTheme.darkTextSecondary
+                                  : const Color(0xFF64748B),
+                            ),
+                            prefixIcon: Icon(
+                              Icons.lock_outline,
+                              color: isDark
+                                  ? AppTheme.darkTextSecondary
+                                  : const Color(0xFF64748B),
+                              size: 20,
+                            ),
+                          ),
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color:
+                                isDark ? AppTheme.darkText : Colors.grey[700],
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Kata sandi wajib diisi';
+                            }
+                            if (value.length < 8) {
+                              return 'Minimal 8 karakter';
+                            }
+                            if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                              return 'Harus mengandung huruf besar';
+                            }
+                            if (!RegExp(r'[0-9]').hasMatch(value)) {
+                              return 'Harus mengandung angka';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        ShadcnButton(
+                          onPressed: _register,
+                          isLoading: _isLoading,
+                          child: const Text('Daftar Sekarang'),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            Expanded(child: Divider(color: Colors.grey[300])),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
+                                'atau',
+                                style: TextStyle(
+                                    color: Colors.grey[500], fontSize: 13),
+                              ),
+                            ),
+                            Expanded(child: Divider(color: Colors.grey[300])),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        ShadcnButton(
+                          onPressed: _signUpWithGoogle,
+                          isPrimary: false,
+                          isLoading: _isLoading,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.network(
+                                'https://www.google.com/favicon.ico',
+                                height: 18,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(Icons.g_mobiledata_rounded,
+                                        size: 18),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text('Daftar dengan Google'),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Sudah memiliki akun? ',
+                              style: TextStyle(
+                                color: isDark
+                                    ? Colors.grey[300]
+                                    : Colors.grey[600],
+                                fontSize: 15,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: TextButton.styleFrom(
+                                foregroundColor: AppTheme.primaryBlue,
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: const Text(
+                                'Masuk Sekarang',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
