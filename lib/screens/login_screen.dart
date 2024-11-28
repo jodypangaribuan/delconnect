@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:async';
-import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import '../routes/app_routes.dart';
 import '../utils/logger.dart';
@@ -35,11 +34,11 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) {
           Navigator.pushReplacementNamed(context, AppRoutes.home);
         }
-      } catch (e) {
+      } on FirebaseAuthException catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Login failed: ${e.toString()}'),
+              content: Text(_getErrorMessage(e.code)),
               backgroundColor: Colors.red,
             ),
           );
@@ -331,7 +330,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: _emailController,
                           decoration: InputDecoration(
                             labelText: 'Email',
-                            hintText: 'nama@student.del.ac.id',
+                            hintText: 'nama@example.com',
                             filled: true,
                             fillColor:
                                 isDark ? AppTheme.darkInput : Colors.white,
@@ -351,6 +350,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
                             ),
+                            floatingLabelStyle: TextStyle(
+                              color: isDark
+                                  ? AppTheme.darkTextSecondary
+                                  : Colors.grey[700],
+                              fontFamily: 'Inter',
+                            ),
+                            contentPadding: const EdgeInsets.all(16),
                             labelStyle: TextStyle(
                               fontFamily: 'Inter',
                               fontSize: 14,
@@ -367,9 +373,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ? AppTheme.darkTextSecondary
                                   : const Color(0xFF64748B),
                             ),
-                            prefixIcon: const Icon(
+                            prefixIcon: Icon(
                               Icons.email_outlined,
-                              color: Color(0xFF64748B),
+                              color: isDark
+                                  ? AppTheme.darkTextSecondary
+                                  : const Color(0xFF64748B),
                               size: 20,
                             ),
                           ),
@@ -377,14 +385,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             fontFamily: 'Inter',
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: isDark ? Colors.grey[300] : Colors.grey[700],
+                            color:
+                                isDark ? AppTheme.darkText : Colors.grey[700],
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Email wajib diisi';
-                            }
-                            if (!value.endsWith('@student.del.ac.id')) {
-                              return 'Gunakan email student.del.ac.id';
                             }
                             return null;
                           },

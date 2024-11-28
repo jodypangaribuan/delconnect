@@ -33,6 +33,16 @@ class AppTheme {
 
   static const Color primaryBlue = Color(0xFF107CC4);
 
+  static const profileGradient = [
+    Color(0xFFDFE9FA), // Light blue overlay
+    Color(0xFFF8FAFC), // Light background
+  ];
+
+  static const profileGradientDark = [
+    Color(0xFF1E293B), // Dark blue overlay
+    Color(0xFF121212), // Dark background
+  ];
+
   static final elevatedCard = BoxDecoration(
     color: lightBackground,
     borderRadius: BorderRadius.circular(16),
