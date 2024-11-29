@@ -27,10 +27,42 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
+        // First check if the email exists and how it can be used to sign in
+        final signInMethods = await FirebaseAuth.instance
+            .fetchSignInMethodsForEmail(_emailController.text.trim());
+
+        if (signInMethods.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content:
+                  Text('Akun belum terdaftar. Silakan daftar terlebih dahulu.'),
+              backgroundColor: Colors.red,
+            ));
+            setState(() => _isLoading = false);
+          }
+          return;
+        }
+
+        // If this email uses Google Sign In, show appropriate message
+        if (signInMethods.contains('google.com') &&
+            !signInMethods.contains('password')) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text(
+                  'Akun ini terdaftar dengan Google. Silakan gunakan tombol "Masuk dengan Google".'),
+              backgroundColor: Colors.red,
+            ));
+            setState(() => _isLoading = false);
+          }
+          return;
+        }
+
+        // Proceed with email/password login
         await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
+
         if (mounted) {
           Navigator.pushReplacementNamed(context, AppRoutes.home);
         }
@@ -54,92 +86,60 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+
     try {
-      AppLogger.log('Starting Google Sign In process');
-
-      try {
-        await FirebaseAuth.instance.signOut();
-        AppLogger.log('Firebase Sign Out successful');
-      } catch (e) {
-        AppLogger.error('Firebase Sign Out failed', e);
-      }
-
-      final GoogleSignIn googleSignIn = GoogleSignIn();
-      try {
-        await googleSignIn.signOut();
-        AppLogger.log('Google Sign Out successful');
-      } catch (e) {
-        AppLogger.error('Google Sign Out failed', e);
-      }
-
+      // Mendapatkan akun Google
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
       if (googleUser == null) {
-        AppLogger.log('Google Sign In cancelled by user');
+        setState(() => _isLoading = false);
         return;
       }
 
-      AppLogger.log('Google Sign In successful', googleUser.email);
-
-      if (!mounted) {
-        AppLogger.log('Widget unmounted after Google Sign In');
-        return;
-      }
-
+      // Mendapatkan autentikasi dari akun Google
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
-      AppLogger.log('Got Google Auth tokens');
-
-      if (!mounted) return;
 
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      // Try to fetch existing user before signing in
-      try {
-        final signInMethods = await FirebaseAuth.instance
-            .fetchSignInMethodsForEmail(googleUser.email);
-        if (signInMethods.isEmpty) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text(
-                  'Akun Gmail belum terdaftar. Silakan daftar terlebih dahulu.'),
-              backgroundColor: Colors.red,
-            ));
-          }
-          return;
+      // Melakukan sign-in ke Firebase dengan kredensial
+      final userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+
+      // Mengecek apakah pengguna baru atau sudah terdaftar
+      if (userCredential.additionalUserInfo?.isNewUser ?? false) {
+        // Jika pengguna baru, logout dan tampilkan pesan
+        await FirebaseAuth.instance.signOut();
+        await googleSignIn.signOut();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content:
+                Text('Akun belum terdaftar. Silakan daftar terlebih dahulu.'),
+            backgroundColor: Colors.red,
+          ));
         }
-      } catch (e) {
-        AppLogger.error('Error checking existing user', e);
+
+        setState(() => _isLoading = false);
         return;
       }
 
-      final userCredential = await FirebaseAuth.instance
-          .signInWithCredential(credential)
-          .timeout(const Duration(seconds: 30));
-
-      AppLogger.log('Firebase Sign In successful', userCredential.user?.email);
-
-      if (!mounted) return;
-
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.home,
-        (route) => false,
-      );
-    } on FirebaseAuthException catch (e, stack) {
-      AppLogger.error('Firebase Auth error', e, stack);
+      // Jika pengguna sudah terdaftar, lanjutkan ke halaman beranda
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(_getErrorMessage(e.code)),
-          backgroundColor: Colors.red,
-        ));
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          AppRoutes.home,
+          (route) => false,
+        );
       }
-    } catch (e, stack) {
-      AppLogger.error('Sign In error', e, stack);
+    } catch (e) {
+      AppLogger.error('Google Sign In error', e);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Sign in error: $e'),
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Gagal masuk dengan Google. Silakan coba lagi.'),
           backgroundColor: Colors.red,
         ));
       }

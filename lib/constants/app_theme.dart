@@ -5,14 +5,14 @@ class AppTheme {
   static const lightAccent = Color(0xFF60A5FA); // Blue-400
   static const lightBackground = Color(0xFFFFFFFF);
   static const lightSurface = Color(0xFFF8FAFC); // Slate-50
-  static const lightText = Color(0xFF1E293B); // Slate-800
+  static const lightText = Color(0xFF000000); // Slate-800
   static const lightTextSecondary = Color(0xFF64748B); // Slate-500
   static const lightBorder = Color(0xFFE2E8F0); // Slate-200
 
   static const Color darkPrimary = primaryBlue;
-  static const darkBackground = Color(0xFF121212);
+  static const darkBackground = Color(0xFF000000);
   static const darkSurface = Color(0xFF1E1E1E);
-  static const darkText = Color(0xFFE5E5E5);
+  static const darkText = Color(0xFFFFFFFF);
   static const darkTextSecondary = Color(0xFF94A3B8);
   static const darkBorder = Color(0xFF2D2D2D);
   static const darkInput = Color(0xFF262626);
@@ -42,6 +42,46 @@ class AppTheme {
     Color(0xFF1E293B), // Dark blue overlay
     Color(0xFF121212), // Dark background
   ];
+
+  // New gradient for story avatars
+  static const Gradient storyGradient = LinearGradient(
+    colors: [
+      Color(0xFFDB36A4),
+      Color(0xFFF7FF00),
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  // Updated gradient for better visual appeal
+  static const Gradient storyGradientBlue = LinearGradient(
+    colors: [
+      Color(0xFF1E88E5),
+      Color(0xFF64B5F6),
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  // Background gradient for the app
+  static const Gradient backgroundGradient = LinearGradient(
+    colors: [
+      Color(0xFF2196F3), // Blue-500
+      Color(0xFF64B5F6), // Blue-300
+    ],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  // Add new gradient for the add button
+  static const Gradient buttonGradient = LinearGradient(
+    colors: [
+      Color(0xFF107CC4), // primaryBlue
+      Color(0xFF42A5F5), // lighter blue
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 
   static final elevatedCard = BoxDecoration(
     color: lightBackground,
@@ -87,17 +127,66 @@ class AppTheme {
     letterSpacing: 0.1,
   );
 
-  static final ThemeData lightTheme = ThemeData(
-    brightness: Brightness.light,
-    primaryColor: lightPrimary,
-    scaffoldBackgroundColor: lightBackground,
-    // ...add other light theme configurations
+  // Updated text styles
+  static const TextStyle uniqueHeadingStyle = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.bold,
+    letterSpacing: 1.2,
+    color: Colors.white,
   );
 
+  static const TextStyle uniqueBodyTextStyle = TextStyle(
+    fontSize: 16,
+    height: 1.5,
+    color: Colors.white70,
+  );
+
+  // Add enhanced text styles for posts
+  static const TextStyle postTitleStyle = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.2,
+    height: 1.3,
+  );
+
+  static const TextStyle postContentStyle = TextStyle(
+    fontSize: 15,
+    height: 1.5,
+    letterSpacing: 0.1,
+    fontWeight: FontWeight.w400,
+  );
+
+  // Updated light theme configurations
+  static final ThemeData lightTheme = ThemeData(
+    brightness: Brightness.light,
+    primaryColor: primaryBlue,
+    scaffoldBackgroundColor: lightBackground,
+    textTheme: TextTheme(
+      titleLarge: uniqueHeadingStyle.copyWith(color: lightText),
+      bodyMedium: uniqueBodyTextStyle,
+      // ...existing text styles...
+    ),
+    navigationBarTheme: const NavigationBarThemeData(
+      height: 0, // Remove default nav bar
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+    ),
+    // ...other theme configurations...
+  );
+
+  // Updated dark theme configurations
   static final ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,
-    primaryColor: darkPrimary,
+    primaryColor: primaryBlue,
     scaffoldBackgroundColor: darkBackground,
-    // ...add other dark theme configurations
+    textTheme: TextTheme(
+      titleLarge: uniqueHeadingStyle.copyWith(color: darkText),
+      bodyMedium: uniqueBodyTextStyle.copyWith(color: darkTextSecondary),
+      // ...existing text styles...
+    ),
+    navigationBarTheme: const NavigationBarThemeData(
+      height: 0, // Remove default nav bar
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+    ),
+    // ...other theme configurations...
   );
 }

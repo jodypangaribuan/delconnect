@@ -95,15 +95,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       AppLogger.log('Starting Google Sign Up process');
 
-      // Sign out from Firebase first
-      try {
-        await FirebaseAuth.instance.signOut();
-        AppLogger.log('Firebase Sign Out successful');
-      } catch (e) {
-        AppLogger.log('Firebase Sign Out failed', e);
-      }
-
-      // Initialize Google Sign In
       final GoogleSignIn googleSignIn = GoogleSignIn();
       try {
         await googleSignIn.signOut();
@@ -112,17 +103,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
         AppLogger.log('Google Sign Out failed', e);
       }
 
-      // Attempt Google Sign In
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      AppLogger.log('Google Sign In attempt completed',
-          googleUser == null ? 'User cancelled' : 'User selected');
-
-      if (!mounted) {
-        AppLogger.log('Widget not mounted after Google Sign In');
+      if (googleUser == null) {
+        AppLogger.log('Google Sign In cancelled by user');
+        setState(() => _isLoading = false);
         return;
       }
 
-      if (googleUser == null) {
+      // Check if email already exists
+      try {
+        final signInMethods = await FirebaseAuth.instance
+            .fetchSignInMethodsForEmail(googleUser.email);
+        if (signInMethods.isNotEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Email sudah terdaftar. Silakan login.'),
+              backgroundColor: Colors.red,
+            ));
+          }
+          setState(() => _isLoading = false);
+          return;
+        }
+      } catch (e) {
+        AppLogger.error('Error checking existing user', e);
         setState(() => _isLoading = false);
         return;
       }
@@ -130,45 +133,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // Get Google Auth details
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
-      AppLogger.log('Got Google Auth tokens');
 
-      if (!mounted) return;
-
-      // Create Firebase credential
+      // Create credential
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      // Sign in to Firebase
+      // Create user with Google credential
       final userCredential =
-          await FirebaseAuth.instance.signInWithCredential(credential).timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          throw TimeoutException('Firebase sign in timed out');
-        },
-      );
+          await FirebaseAuth.instance.signInWithCredential(credential);
 
-      AppLogger.log('Firebase Sign In completed',
-          userCredential.user?.email ?? 'No email');
+      AppLogger.log('Account creation successful', userCredential.user?.email);
 
-      if (!mounted) return;
+      // Sign out immediately after creating account
+      await FirebaseAuth.instance.signOut();
 
-      if (userCredential.user != null) {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          AppRoutes.home,
-          (route) => false,
-        );
-      }
-    } catch (e) {
-      AppLogger.log('Sign Up error occurred', e);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Sign up error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        // Show success message and navigate back to login
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Akun Google berhasil dibuat. Silakan login.'),
+          backgroundColor: Colors.green,
+        ));
+
+        Navigator.pop(context); // Return to login screen
+      }
+    } catch (e, stack) {
+      AppLogger.error('Sign Up error', e, stack);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Sign up error: $e'),
+          backgroundColor: Colors.red,
+        ));
       }
     } finally {
       if (mounted) {
