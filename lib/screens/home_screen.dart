@@ -87,6 +87,7 @@ class _HomeScreenState extends State<HomeScreen>
       child: Stack(
         children: [
           Scaffold(
+            extendBody: true, // Add this line
             resizeToAvoidBottomInset: false,
             backgroundColor: Colors.transparent,
             body: Container(
@@ -99,12 +100,18 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
               child: SafeArea(
+                bottom: false, // Add this line
                 child: CustomScrollView(
                   controller: _scrollController,
                   slivers: [
                     _buildAppBar(),
                     _buildStories(),
-                    _buildPosts(),
+                    SliverPadding(
+                      // Wrap _buildPosts with SliverPadding
+                      padding: const EdgeInsets.only(
+                          bottom: kBottomNavigationBarHeight + 20),
+                      sliver: _buildPosts(),
+                    ),
                   ],
                 ),
               ),
@@ -121,6 +128,21 @@ class _HomeScreenState extends State<HomeScreen>
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
                   height: MediaQuery.of(context).padding.top,
+                  color: Colors.transparent,
+                ),
+              ),
+            ),
+          ),
+          // Bottom safe area blur
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  height: MediaQuery.of(context).padding.bottom,
                   color: Colors.transparent,
                 ),
               ),
@@ -177,7 +199,7 @@ class _HomeScreenState extends State<HomeScreen>
         ),
         IconButton(
           icon: Icon(
-            Icons.send_rounded, // Changed from messenger_outline_rounded
+            Icons.chat_rounded, // Changed from send_rounded to chat_rounded
             color: isDark ? AppTheme.darkText : AppTheme.lightText,
           ),
           onPressed: () {},
@@ -453,10 +475,11 @@ class _HomeScreenState extends State<HomeScreen>
       child: Container(
         height: kBottomNavigationBarHeight,
         decoration: BoxDecoration(
-          color: Colors.transparent,
+          color: (isDark ? Colors.black : Colors.white)
+              .withOpacity(0.5), // Increased opacity
           border: Border(
             top: BorderSide(
-              color: (isDark ? Colors.white : Colors.black).withOpacity(0.08),
+              color: (isDark ? Colors.white : Colors.black).withOpacity(0.12),
               width: 0.5,
             ),
           ),
@@ -465,7 +488,8 @@ class _HomeScreenState extends State<HomeScreen>
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
-              color: (isDark ? Colors.black : Colors.white).withOpacity(0.1),
+              color: (isDark ? Colors.black : Colors.white)
+                  .withOpacity(0.3), // Adjusted opacity
               child: BottomNavigationBar(
                 currentIndex: _currentIndex,
                 onTap: (index) => setState(() => _currentIndex = index),
@@ -489,19 +513,19 @@ class _HomeScreenState extends State<HomeScreen>
                     label: 'Home',
                   ),
                   BottomNavigationBarItem(
-                    icon: Icon(Icons.favorite_outline),
-                    activeIcon: Icon(Icons.favorite),
-                    label: 'Activity',
+                    icon: Icon(Icons.search_outlined),
+                    activeIcon: Icon(Icons.search),
+                    label: 'Search',
                   ),
                   BottomNavigationBarItem(
-                    icon: Icon(Icons.add_box_outlined),
-                    activeIcon: Icon(Icons.add_box),
-                    label: 'Post',
+                    icon: Icon(Icons.explore_outlined),
+                    activeIcon: Icon(Icons.explore),
+                    label: 'Explore',
                   ),
                   BottomNavigationBarItem(
-                    icon: Icon(Icons.messenger_outline_rounded),
-                    activeIcon: Icon(Icons.messenger_rounded),
-                    label: 'Messages',
+                    icon: Icon(Icons.person_outline_rounded),
+                    activeIcon: Icon(Icons.person_rounded),
+                    label: 'Profile',
                   ),
                 ],
               ),
