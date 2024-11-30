@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:iconsax/iconsax.dart';
 import '../routes/app_routes.dart';
 import '../utils/logger.dart';
 import '../widgets/shadcn_button.dart';
@@ -23,8 +25,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _usernameController = TextEditingController();
   bool _isLoading = false;
   final double _indicatorExtent = 0;
+  bool _showPassword = false;
 
   Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
@@ -44,6 +48,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
         await userCredential.user?.updateDisplayName(
             '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}');
         AppLogger.log('Display name updated');
+
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user?.uid)
+            .set({
+          'firstName': _firstNameController.text.trim(),
+          'lastName': _lastNameController.text.trim(),
+          'username': _usernameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'createdAt': FieldValue.serverTimestamp(),
+        });
 
         if (mounted) {
           Navigator.pushReplacementNamed(context, AppRoutes.home);
@@ -221,7 +236,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           return Transform.rotate(
                             angle: value * 2 * 3.14,
                             child: const Icon(
-                              Icons.refresh_rounded,
+                              Iconsax.refresh, // Replace refresh_rounded
                               color: Colors.white,
                               size: 24,
                             ),
@@ -389,7 +404,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         : const Color(0xFF64748B),
                                   ),
                                   prefixIcon: Icon(
-                                    Icons.person_outline,
+                                    Iconsax.user, // Replace person_outline
                                     color: isDark
                                         ? AppTheme.darkTextSecondary
                                         : const Color(0xFF64748B),
@@ -468,7 +483,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         : const Color(0xFF64748B),
                                   ),
                                   prefixIcon: Icon(
-                                    Icons.person_outline,
+                                    Iconsax.user, // Replace person_outline
                                     color: isDark
                                         ? AppTheme.darkTextSecondary
                                         : const Color(0xFF64748B),
@@ -495,6 +510,84 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                             ),
                           ],
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _usernameController,
+                          decoration: InputDecoration(
+                            labelText: 'Username',
+                            hintText: '@username',
+                            filled: true,
+                            fillColor:
+                                isDark ? AppTheme.darkInput : Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: isDark
+                                    ? AppTheme.darkBorder
+                                    : Colors.grey[300]!,
+                                width: 1,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            floatingLabelStyle: TextStyle(
+                              color: isDark
+                                  ? AppTheme.darkTextSecondary
+                                  : Colors.grey[700],
+                              fontFamily: 'Inter',
+                            ),
+                            contentPadding: const EdgeInsets.all(16),
+                            labelStyle: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: isDark
+                                  ? AppTheme.darkTextSecondary
+                                  : Colors.grey[700],
+                            ),
+                            hintStyle: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                              color: isDark
+                                  ? AppTheme.darkTextSecondary
+                                  : const Color(0xFF64748B),
+                            ),
+                            prefixIcon: Icon(
+                              Iconsax
+                                  .user_tag, // Changed from Iconsax.user to Iconsax.user_tag
+                              color: isDark
+                                  ? AppTheme.darkTextSecondary
+                                  : const Color(0xFF64748B),
+                              size: 20,
+                            ),
+                          ),
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color:
+                                isDark ? AppTheme.darkText : Colors.grey[700],
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Username wajib diisi';
+                            }
+                            if (value.length < 3) {
+                              return 'Username minimal 3 karakter';
+                            }
+                            if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) {
+                              return 'Username hanya boleh huruf, angka, dan underscore';
+                            }
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 20),
                         TextFormField(
@@ -546,7 +639,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   : const Color(0xFF64748B),
                             ),
                             prefixIcon: Icon(
-                              Icons.email_outlined,
+                              Iconsax.sms, // Replace email_outlined
                               color: isDark
                                   ? AppTheme.darkTextSecondary
                                   : const Color(0xFF64748B),
@@ -573,7 +666,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         const SizedBox(height: 20),
                         TextFormField(
                           controller: _passwordController,
-                          obscureText: true,
+                          obscureText: !_showPassword,
                           decoration: InputDecoration(
                             labelText: 'Kata Sandi',
                             hintText: 'Min. 8 karakter',
@@ -621,11 +714,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   : const Color(0xFF64748B),
                             ),
                             prefixIcon: Icon(
-                              Icons.lock_outline,
+                              Iconsax.lock, // Replace lock_outline
                               color: isDark
                                   ? AppTheme.darkTextSecondary
                                   : const Color(0xFF64748B),
                               size: 20,
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _showPassword ? Iconsax.eye : Iconsax.eye_slash,
+                                color: isDark
+                                    ? AppTheme.darkTextSecondary
+                                    : const Color(0xFF64748B),
+                                size: 20,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _showPassword = !_showPassword;
+                                });
+                              },
                             ),
                           ),
                           style: TextStyle(

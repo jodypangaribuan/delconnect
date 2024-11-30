@@ -8,6 +8,7 @@ import '../utils/logger.dart';
 import '../widgets/shadcn_button.dart';
 import '../constants/app_theme.dart';
 import 'dart:ui';
+import 'package:iconsax/iconsax.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -22,6 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   final double _indicatorExtent = 0;
+  bool _showPassword = false;
 
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
@@ -213,7 +215,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           return Transform.rotate(
                             angle: value * 2 * 3.14,
                             child: const Icon(
-                              Icons.refresh_rounded,
+                              Iconsax.refresh, // Replace refresh_rounded
                               color: Colors.white,
                               size: 24,
                             ),
@@ -374,7 +376,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   : const Color(0xFF64748B),
                             ),
                             prefixIcon: Icon(
-                              Icons.email_outlined,
+                              Iconsax.sms, // Replace email_outlined
                               color: isDark
                                   ? AppTheme.darkTextSecondary
                                   : const Color(0xFF64748B),
@@ -398,7 +400,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 20),
                         TextFormField(
                           controller: _passwordController,
-                          obscureText: true,
+                          obscureText: !_showPassword,
                           decoration: InputDecoration(
                             labelText: 'Kata Sandi',
                             hintText: 'Masukkan kata sandi',
@@ -445,11 +447,25 @@ class _LoginScreenState extends State<LoginScreen> {
                                   : const Color(0xFF64748B),
                             ),
                             prefixIcon: Icon(
-                              Icons.lock_outline,
+                              Iconsax.lock, // Replace lock_outline
                               color: isDark
                                   ? AppTheme.darkTextSecondary
                                   : const Color(0xFF64748B),
                               size: 20,
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _showPassword ? Iconsax.eye : Iconsax.eye_slash,
+                                color: isDark
+                                    ? AppTheme.darkTextSecondary
+                                    : const Color(0xFF64748B),
+                                size: 20,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _showPassword = !_showPassword;
+                                });
+                              },
                             ),
                           ),
                           style: TextStyle(

@@ -1,212 +1,660 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'dart:ui';
+import 'package:provider/provider.dart';
 import '../constants/app_theme.dart';
+import '../providers/navigation_state.dart';
+import 'package:iconsax/iconsax.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor =
-        isDark ? AppTheme.darkBackground : AppTheme.lightBackground;
-    final surfaceColor = isDark ? AppTheme.darkSurface : AppTheme.lightSurface;
-    final textColor = isDark ? AppTheme.darkText : AppTheme.lightText;
-    final textSecondaryColor =
-        isDark ? AppTheme.darkTextSecondary : AppTheme.lightTextSecondary;
-    final primary = isDark ? AppTheme.darkPrimary : AppTheme.lightPrimary;
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
 
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: AppBar(
-        backgroundColor: surfaceColor,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: textColor),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(CupertinoIcons.bell, color: textColor),
-            onPressed: () {},
+class _ProfileScreenState extends State<ProfileScreen>
+    with TickerProviderStateMixin {
+  final ScrollController _scrollController = ScrollController();
+  bool _isScrolled = false;
+  bool _isScrollingDown = false;
+  double _lastScrollPosition = 0;
+
+  // Add new animation controllers
+  late AnimationController _profileImageController;
+  late AnimationController _headerController;
+  late AnimationController _statsController;
+  late AnimationController _bioController;
+  late AnimationController _gridController;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize animation controllers
+    _profileImageController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _headerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _statsController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    _bioController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
+    _gridController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    );
+
+    // Start animations sequentially
+    _startAnimations();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _startAnimations() async {
+    await Future.delayed(const Duration(milliseconds: 100));
+    _profileImageController.forward();
+    await Future.delayed(const Duration(milliseconds: 200));
+    _headerController.forward();
+    await Future.delayed(const Duration(milliseconds: 200));
+    _statsController.forward();
+    await Future.delayed(const Duration(milliseconds: 200));
+    _bioController.forward();
+    await Future.delayed(const Duration(milliseconds: 200));
+    _gridController.forward();
+  }
+
+  void _onScroll() {
+    double currentScrollPosition = _scrollController.position.pixels;
+
+    if ((currentScrollPosition > _lastScrollPosition) && !_isScrollingDown) {
+      setState(() => _isScrollingDown = true);
+    } else if ((currentScrollPosition < _lastScrollPosition) &&
+        _isScrollingDown) {
+      setState(() => _isScrollingDown = false);
+    }
+
+    _lastScrollPosition = currentScrollPosition;
+
+    if (_scrollController.offset > 0 && !_isScrolled) {
+      setState(() => _isScrolled = true);
+    } else if (_scrollController.offset <= 0 && _isScrolled) {
+      setState(() => _isScrolled = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _profileImageController.dispose();
+    _headerController.dispose();
+    _statsController.dispose();
+    _bioController.dispose();
+    _gridController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: isDark
+          ? SystemUiOverlayStyle.light.copyWith(
+              systemNavigationBarColor: Colors.transparent,
+              statusBarColor: Colors.transparent,
+            )
+          : SystemUiOverlayStyle.dark.copyWith(
+              systemNavigationBarColor: Colors.transparent,
+              statusBarColor: Colors.transparent,
+            ),
+      child: Stack(
+        children: [
+          Scaffold(
+            extendBody: true,
+            backgroundColor: Colors.transparent,
+            body: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
+                  colors:
+                      isDark ? AppTheme.gradientDark : AppTheme.gradientLight,
+                ),
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: CustomScrollView(
+                  controller: _scrollController,
+                  slivers: [
+                    _buildAppBar(isDark),
+                    SliverToBoxAdapter(child: _buildProfileHeader(isDark)),
+                    SliverToBoxAdapter(child: _buildStats(isDark)),
+                    SliverToBoxAdapter(child: _buildBio(isDark)),
+                    SliverPadding(
+                      padding: const EdgeInsets.only(
+                          bottom: kBottomNavigationBarHeight + 20),
+                      sliver: _buildPhotoGrid(isDark),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            bottomNavigationBar: _buildBottomNavBar(isDark),
           ),
-          IconButton(
-            icon: Icon(CupertinoIcons.settings, color: textColor),
-            onPressed: () {},
+          // Add blur effects for status bar and bottom safe area
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  height: MediaQuery.of(context).padding.top,
+                  color: Colors.transparent,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  height: MediaQuery.of(context).padding.bottom,
+                  color: Colors.transparent,
+                ),
+              ),
+            ),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              color: surfaceColor,
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Stack(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              AppTheme.pastelBlue,
-                              AppTheme.pastelIndigo
-                            ],
-                          ),
-                          shape: BoxShape.circle,
-                        ),
-                        child: CircleAvatar(
-                          radius: 50,
-                          backgroundColor: surfaceColor,
-                          child: CircleAvatar(
-                            radius: 47,
-                            backgroundColor: primary.withOpacity(0.1),
-                            child: Icon(CupertinoIcons.person_fill,
-                                size: 50, color: primary),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        right: 0,
-                        bottom: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: primary,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt,
-                            size: 20,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'John Doe',
-                    style: AppTheme.textStyleHeading.copyWith(
-                      color: textColor,
-                      fontSize: 24,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '@johndoe',
-                    style: TextStyle(color: textSecondaryColor),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Software Developer | Flutter Enthusiast',
-                    style: TextStyle(color: textSecondaryColor),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 1), // Divider
-            Container(
-              color: surfaceColor,
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildStat('Posts', '245', textColor, textSecondaryColor),
-                  _buildStat('Following', '851', textColor, textSecondaryColor),
-                  _buildStat(
-                      'Followers', '1.2K', textColor, textSecondaryColor),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: 5,
-              itemBuilder: (context, index) => _buildPostItem(
-                context,
-                index,
-                isDark,
-                textColor,
-                textSecondaryColor,
-                primary,
-              ),
-            ),
-          ],
+    );
+  }
+
+  Widget _buildAppBar(bool isDark) {
+    return SliverAppBar(
+      floating: true,
+      pinned: false, // Changed from true
+      backgroundColor: _isScrolled
+          ? (isDark ? Colors.black : Colors.white).withOpacity(0.8)
+          : Colors.transparent,
+      expandedHeight: 0, // Removed expandedHeight
+      toolbarHeight: 56, // Standard height
+      centerTitle: true, // Center the title
+      actions: [
+        IconButton(
+          icon: Icon(
+            Iconsax.notification_bing,
+            color: isDark ? Colors.white : Colors.black,
+            size: 24,
+          ),
+          onPressed: () {},
+        ),
+        IconButton(
+          icon: Icon(
+            Iconsax.setting_2,
+            color: isDark ? Colors.white : Colors.black,
+            size: 24,
+          ),
+          onPressed: () {},
+        ),
+        IconButton(
+          icon: Icon(
+            Iconsax.share,
+            color: isDark ? Colors.white : Colors.black,
+            size: 24,
+          ),
+          onPressed: () {},
+        ),
+      ],
+      elevation: 0,
+      flexibleSpace: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: Container(color: Colors.transparent),
         ),
       ),
     );
   }
 
-  Widget _buildStat(
-      String label, String value, Color textColor, Color secondaryColor) {
+  Widget _buildProfileHeader(bool isDark) {
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(0, 0.5),
+        end: Offset.zero,
+      ).animate(CurvedAnimation(
+        parent: _headerController,
+        curve: Curves.easeOutCubic,
+      )),
+      child: FadeTransition(
+        opacity: _headerController,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  TweenAnimationBuilder(
+                    tween: Tween<double>(begin: 0, end: 1),
+                    duration: const Duration(milliseconds: 800),
+                    builder: (context, value, child) {
+                      return Transform.scale(
+                        scale: value,
+                        child: Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [Colors.purple, Colors.blue.shade600],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.purple.withOpacity(0.3),
+                                blurRadius: 12,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: CircleAvatar(
+                            radius: 40,
+                            backgroundColor:
+                                isDark ? Colors.black : Colors.white,
+                            child: const CircleAvatar(
+                              radius: 38,
+                              backgroundImage:
+                                  NetworkImage('https://picsum.photos/200'),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Jody Pangaribuan',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black,
+                          ),
+                        ),
+                        Text(
+                          '@jody.drian  ',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: (isDark ? Colors.white : Colors.black)
+                                .withOpacity(0.7),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(
+                              Iconsax.location,
+                              size: 16,
+                              color: isDark ? Colors.white70 : Colors.black54,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Institut Teknologi Del',
+                              style: TextStyle(
+                                color: isDark ? Colors.white70 : Colors.black54,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildQuickActions(isDark),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActions(bool isDark) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _buildActionButton(Iconsax.edit_2, 'Edit Profile', isDark),
+        _buildActionButton(Iconsax.share, 'Share', isDark),
+        _buildActionButton(Iconsax.bookmark, 'Saved', isDark),
+      ],
+    );
+  }
+
+  Widget _buildActionButton(IconData icon, String label, bool isDark) {
+    return TweenAnimationBuilder(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 600),
+      builder: (context, value, child) {
+        return Transform.scale(
+          scale: value,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color:
+                      (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                  blurRadius: 8,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Icon(icon,
+                    size: 16, color: isDark ? Colors.white : Colors.black),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStats(bool isDark) {
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(-0.5, 0),
+        end: Offset.zero,
+      ).animate(CurvedAnimation(
+        parent: _statsController,
+        curve: Curves.easeOutCubic,
+      )),
+      child: FadeTransition(
+        opacity: _statsController,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildStatItem('128', 'Postingan', isDark),
+              _buildStatDivider(isDark),
+              _buildStatItem('1.2K', 'Pengikut', isDark),
+              _buildStatDivider(isDark),
+              _buildStatItem('845', 'Mengikuti', isDark),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatDivider(bool isDark) {
+    return Container(
+      height: 20,
+      width: 1,
+      color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+    );
+  }
+
+  Widget _buildStatItem(String value, String label, bool isDark) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           value,
-          style: AppTheme.textStyleHeading.copyWith(
-            color: textColor,
-            fontSize: 20,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : Colors.black,
           ),
         ),
+        const SizedBox(height: 4),
         Text(
           label,
-          style: TextStyle(color: secondaryColor),
+          style: TextStyle(
+            fontSize: 13,
+            color: (isDark ? Colors.white : Colors.black).withOpacity(0.7),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildPostItem(BuildContext context, int index, bool isDark,
-      Color textColor, Color secondaryColor, Color primary) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: isDark ? AppTheme.elevatedCardDark : AppTheme.elevatedCard,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (index % 2 == 0)
-            Container(
-              height: 200,
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: LinearGradient(
-                  colors:
-                      isDark ? AppTheme.gradientDark : AppTheme.gradientLight,
-                ),
-              ),
-              child: Center(
-                child: Icon(Icons.image, size: 48, color: primary),
-              ),
-            ),
-          Text(
-            'Post caption #${index + 1}',
-            style: TextStyle(color: textColor),
-          ),
-          const SizedBox(height: 12),
-          Row(
+  Widget _buildBio(bool isDark) {
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(0.5, 0),
+        end: Offset.zero,
+      ).animate(CurvedAnimation(
+        parent: _bioController,
+        curve: Curves.easeOutCubic,
+      )),
+      child: FadeTransition(
+        opacity: _bioController,
+        child: Container(
+          margin: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${2 + index}h ago',
-                style: TextStyle(color: secondaryColor, fontSize: 12),
+                '11323025 • Teknologi Informasi 23',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
               ),
-              const Spacer(),
-              Icon(CupertinoIcons.heart, size: 16, color: secondaryColor),
-              const SizedBox(width: 4),
-              Text('${24 + index}', style: TextStyle(color: secondaryColor)),
-              const SizedBox(width: 16),
-              Icon(CupertinoIcons.chat_bubble, size: 16, color: secondaryColor),
-              const SizedBox(width: 4),
-              Text('${5 + index}', style: TextStyle(color: secondaryColor)),
+              const SizedBox(height: 4),
+              Text(
+                'Mahasiswa IT Del',
+                style: TextStyle(
+                  color: isDark ? Colors.white70 : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'MarTuhan, MarRoha, MarBisnis 🎓\nPejuang Deadline 💻\nKampus Hijau 🌱',
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black,
+                  height: 1.4,
+                ),
+              ),
             ],
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhotoGrid(bool isDark) {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      sliver: SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            // Fix the interval calculation
+            final startInterval = (index * 0.1).clamp(0.0, 0.9);
+            final endInterval = (startInterval + 0.1).clamp(0.0, 1.0);
+
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.2),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: _gridController,
+                curve: Interval(
+                  startInterval,
+                  endInterval,
+                  curve: Curves.easeOutCubic,
+                ),
+              )),
+              child: FadeTransition(
+                opacity: _gridController,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.network(
+                          'https://picsum.photos/200?random=$index',
+                          fit: BoxFit.cover,
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withOpacity(0.5),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 8,
+                          left: 8,
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Iconsax.heart5,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${(index + 1) * 11}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+          childCount: 30,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNavBar(bool isDark) {
+    return AnimatedSlide(
+      duration: const Duration(milliseconds: 200),
+      offset: _isScrollingDown ? const Offset(0, 1) : const Offset(0, 0),
+      child: Consumer<NavigationState>(
+        builder: (context, navigationState, child) => Container(
+          height: kBottomNavigationBarHeight,
+          decoration: BoxDecoration(
+            color: (isDark ? Colors.black : Colors.white).withOpacity(0.5),
+            border: Border(
+              top: BorderSide(
+                color: (isDark ? Colors.white : Colors.black).withOpacity(0.12),
+                width: 0.5,
+              ),
+            ),
+          ),
+          child: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                color: (isDark ? Colors.black : Colors.white).withOpacity(0.3),
+                child: BottomNavigationBar(
+                  currentIndex: navigationState.currentIndex,
+                  onTap: (index) {
+                    context.read<NavigationState>().updateIndex(index);
+                    if (index != 3) {
+                      Navigator.pop(context);
+                    }
+                  },
+                  elevation: 0,
+                  backgroundColor: Colors.transparent,
+                  selectedItemColor:
+                      isDark ? AppTheme.darkText : AppTheme.lightText,
+                  unselectedItemColor:
+                      (isDark ? AppTheme.darkText : AppTheme.lightText)
+                          .withOpacity(0.5),
+                  type: BottomNavigationBarType.fixed,
+                  showSelectedLabels: true,
+                  showUnselectedLabels: true,
+                  selectedFontSize: 10.0,
+                  unselectedFontSize: 10.0,
+                  iconSize: 24.0,
+                  items: const [
+                    BottomNavigationBarItem(
+                      icon: Icon(Iconsax.home),
+                      activeIcon: Icon(Iconsax.home_15),
+                      label: 'Home',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Iconsax.search_normal),
+                      activeIcon: Icon(Iconsax.search_normal_1),
+                      label: 'Search',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Iconsax.discover),
+                      activeIcon: Icon(Iconsax.discover_1),
+                      label: 'Explore',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Iconsax.profile_circle),
+                      activeIcon: Icon(Iconsax.profile_circle5),
+                      label: 'Profile',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

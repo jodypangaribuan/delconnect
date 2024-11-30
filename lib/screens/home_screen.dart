@@ -1,9 +1,14 @@
+import 'package:delconnect/screens/profile_screen.dart';
+import 'package:delconnect/screens/search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax/iconsax.dart';
 import 'dart:ui';
 import '../constants/app_theme.dart';
+import 'package:provider/provider.dart';
+import '../providers/navigation_state.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,7 +24,6 @@ class _HomeScreenState extends State<HomeScreen>
   bool _isScrolled = false;
   bool _isScrollingDown = false;
   double _lastScrollPosition = 0;
-  int _currentIndex = 0; // Add this line
 
   @override
   void initState() {
@@ -192,14 +196,14 @@ class _HomeScreenState extends State<HomeScreen>
       actions: [
         IconButton(
           icon: Icon(
-            Icons.favorite_border,
+            Iconsax.heart, // Changed from Icons.favorite_border
             color: isDark ? AppTheme.darkText : AppTheme.lightText,
           ),
           onPressed: () {},
         ),
         IconButton(
           icon: Icon(
-            Icons.chat_rounded, // Changed from send_rounded to chat_rounded
+            Iconsax.message, // Changed from Icons.chat_rounded
             color: isDark ? AppTheme.darkText : AppTheme.lightText,
           ),
           onPressed: () {},
@@ -217,44 +221,124 @@ class _HomeScreenState extends State<HomeScreen>
         color: Colors.transparent,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
-          itemCount: 10,
+          itemCount: 11, // Increased by 1 to accommodate the add story button
           itemBuilder: (context, index) {
+            if (index == 0) {
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [Colors.purple, Colors.blue.shade600],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.purple.withOpacity(0.3),
+                            blurRadius: 12,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: CircleAvatar(
+                        radius: 32,
+                        backgroundColor: isDark
+                            ? AppTheme.darkBackground
+                            : AppTheme.lightBackground,
+                        child: CircleAvatar(
+                          radius: 30,
+                          backgroundColor:
+                              isDark ? Colors.grey[900] : Colors.grey[100],
+                          child: Stack(
+                            children: [
+                              Center(
+                                child: Icon(
+                                  Iconsax.story,
+                                  color: isDark
+                                      ? Colors.grey[300]
+                                      : Colors.grey[800],
+                                  size: 28,
+                                ),
+                              ),
+                              Positioned(
+                                bottom: 2,
+                                right: 2,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.blue.shade600,
+                                    border: Border.all(
+                                      color: isDark
+                                          ? AppTheme.darkBackground
+                                          : AppTheme.lightBackground,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Iconsax.add,
+                                    color: Colors.white,
+                                    size: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Cerita Kamu', // Changed from 'Your Story'
+                      style: TextStyle(
+                        color: isDark ? AppTheme.darkText : AppTheme.lightText,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
             return Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(
                 children: [
                   Container(
-                    width: 70,
-                    height: 70,
-                    decoration: const BoxDecoration(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
-                        colors: [Colors.purple, Colors.pink, Colors.orange],
+                        colors: [Colors.purple, Colors.blue.shade600],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.purple.withOpacity(0.3),
+                          blurRadius: 12,
+                          spreadRadius: 2,
+                        ),
+                      ],
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(3.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border:
-                              Border.all(color: Colors.transparent, width: 3),
-                          image: DecorationImage(
-                            image: NetworkImage(
-                                'https://picsum.photos/200?random=${index + 1}'),
-                            fit: BoxFit.cover,
-                            onError: (exception, stackTrace) =>
-                                const Icon(Icons.person),
-                          ),
+                    child: CircleAvatar(
+                      radius: 32,
+                      backgroundColor: isDark ? Colors.black : Colors.white,
+                      child: CircleAvatar(
+                        radius: 30,
+                        backgroundImage: NetworkImage(
+                          'https://picsum.photos/200?random=$index',
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'User $index',
+                    'Pengguna ${index - 1}', // Changed from 'User ${index - 1}'
                     style: TextStyle(
                       color: isDark ? AppTheme.darkText : AppTheme.lightText,
                       fontSize: 12,
@@ -311,7 +395,7 @@ class _HomeScreenState extends State<HomeScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'User $index',
+                            'Pengguna $index', // Changed from 'User $index'
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: isDark
@@ -320,7 +404,9 @@ class _HomeScreenState extends State<HomeScreen>
                             ),
                           ),
                           Text(
-                            '2h ago',
+                            index % 2 == 0
+                                ? 'Baru saja'
+                                : 'Kemarin', // Changed from '2h ago'
                             style: TextStyle(
                               color: isDark
                                   ? AppTheme.darkTextSecondary
@@ -385,20 +471,26 @@ class _HomeScreenState extends State<HomeScreen>
                         Row(
                           children: [
                             _buildIconButton(
-                                Icons.favorite_border, Colors.white),
+                                Iconsax.heart,
+                                Colors
+                                    .white), // Changed from Icons.favorite_border
                             const SizedBox(width: 16),
                             _buildIconButton(
-                                Icons.chat_bubble_outline, Colors.white),
+                                Iconsax.message,
+                                Colors
+                                    .white), // Changed from Icons.chat_bubble_outline
                             const SizedBox(width: 16),
-                            _buildIconButton(Icons.send, Colors.white),
+                            _buildIconButton(Iconsax.send_2,
+                                Colors.white), // Changed from Icons.send
                           ],
                         ),
-                        _buildIconButton(Icons.bookmark_border, Colors.white),
+                        _buildIconButton(Iconsax.save_2,
+                            Colors.white), // Changed from Icons.bookmark_border
                       ],
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '1,234 likes',
+                      '${1234 - index} suka', // Changed from '1,234 likes'
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: isDark ? Colors.white : Colors.black87,
@@ -412,12 +504,13 @@ class _HomeScreenState extends State<HomeScreen>
                         ),
                         children: [
                           TextSpan(
-                            text: 'User $index ',
+                            text:
+                                'Pengguna $index ', // Changed from 'User $index'
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           TextSpan(
-                            text:
-                                'This is a sample caption for the post. #flutter #ui #design',
+                            text: _getRandomCaption(
+                                index), // Added random captions
                             style: TextStyle(
                               color: isDark
                                   ? Colors.white.withOpacity(0.9)
@@ -429,7 +522,7 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'View all 48 comments',
+                      'Lihat ${48 - index} komentar', // Changed from 'View all 48 comments'
                       style: TextStyle(
                         color: isDark
                             ? Colors.white.withOpacity(0.6)
@@ -472,67 +565,108 @@ class _HomeScreenState extends State<HomeScreen>
     return AnimatedSlide(
       duration: const Duration(milliseconds: 200),
       offset: _isScrollingDown ? const Offset(0, 1) : const Offset(0, 0),
-      child: Container(
-        height: kBottomNavigationBarHeight,
-        decoration: BoxDecoration(
-          color: (isDark ? Colors.black : Colors.white)
-              .withOpacity(0.5), // Increased opacity
-          border: Border(
-            top: BorderSide(
-              color: (isDark ? Colors.white : Colors.black).withOpacity(0.12),
-              width: 0.5,
+      child: Consumer<NavigationState>(
+        builder: (context, navigationState, child) => Container(
+          height: kBottomNavigationBarHeight,
+          decoration: BoxDecoration(
+            color: (isDark ? Colors.black : Colors.white)
+                .withOpacity(0.5), // Increased opacity
+            border: Border(
+              top: BorderSide(
+                color: (isDark ? Colors.white : Colors.black).withOpacity(0.12),
+                width: 0.5,
+              ),
             ),
           ),
-        ),
-        child: ClipRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              color: (isDark ? Colors.black : Colors.white)
-                  .withOpacity(0.3), // Adjusted opacity
-              child: BottomNavigationBar(
-                currentIndex: _currentIndex,
-                onTap: (index) => setState(() => _currentIndex = index),
-                elevation: 0,
-                backgroundColor: Colors.transparent,
-                selectedItemColor:
-                    isDark ? AppTheme.darkText : AppTheme.lightText,
-                unselectedItemColor:
-                    (isDark ? AppTheme.darkText : AppTheme.lightText)
-                        .withOpacity(0.5),
-                type: BottomNavigationBarType.fixed,
-                showSelectedLabels: true,
-                showUnselectedLabels: true,
-                selectedFontSize: 10.0,
-                unselectedFontSize: 10.0,
-                iconSize: 24.0,
-                items: const [
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.home_outlined),
-                    activeIcon: Icon(Icons.home),
-                    label: 'Home',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.search_outlined),
-                    activeIcon: Icon(Icons.search),
-                    label: 'Search',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.explore_outlined),
-                    activeIcon: Icon(Icons.explore),
-                    label: 'Explore',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.person_outline_rounded),
-                    activeIcon: Icon(Icons.person_rounded),
-                    label: 'Profile',
-                  ),
-                ],
+          child: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                color: (isDark ? Colors.black : Colors.white)
+                    .withOpacity(0.3), // Adjusted opacity
+                child: BottomNavigationBar(
+                  currentIndex: navigationState.currentIndex,
+                  onTap: (index) {
+                    // Update the shared navigation state
+                    context.read<NavigationState>().updateIndex(index);
+                    if (index == 1) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const SearchScreen()),
+                      );
+                    } else if (index == 3) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ProfileScreen()),
+                      );
+                    }
+                  },
+                  elevation: 0,
+                  backgroundColor: Colors.transparent,
+                  selectedItemColor:
+                      isDark ? AppTheme.darkText : AppTheme.lightText,
+                  unselectedItemColor:
+                      (isDark ? AppTheme.darkText : AppTheme.lightText)
+                          .withOpacity(0.5),
+                  type: BottomNavigationBarType.fixed,
+                  showSelectedLabels: true,
+                  showUnselectedLabels: true,
+                  selectedFontSize: 10.0,
+                  unselectedFontSize: 10.0,
+                  iconSize: 24.0,
+                  items: const [
+                    BottomNavigationBarItem(
+                      icon: Icon(
+                          Iconsax.home), // Changed from Icons.home_outlined
+                      activeIcon:
+                          Icon(Iconsax.home_15), // Changed from Icons.home
+                      label: 'Home',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Iconsax
+                          .search_normal), // Changed from Icons.search_outlined
+                      activeIcon: Icon(
+                          Iconsax.search_normal_1), // Changed from Icons.search
+                      label: 'Search',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Iconsax
+                          .discover), // Changed from Icons.explore_outlined
+                      activeIcon: Icon(
+                          Iconsax.discover_1), // Changed from Icons.explore
+                      label: 'Explore',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Iconsax
+                          .profile_circle), // Changed from Icons.person_outline_rounded
+                      activeIcon: Icon(Iconsax
+                          .profile_circle5), // Changed from Icons.person_rounded
+                      label: 'Profile',
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  // Add this new method for random captions
+  String _getRandomCaption(int index) {
+    final List<String> captions = [
+      'Suasana seru di kampus hari ini! 🎓 #KampusHijau #ITDel',
+      'Quality time bareng squad di danau Toba 🌊 #PenggunaVibes #TobaLife',
+      'Grinding tugas di perpus, siapa yang sama? 📚 #MahasiswaKuat #ITDel',
+      'Moment seru di kantin, makan bareng teman-teman 🍱 #PenggunaMoments',
+      'Praktikum hari ini, semangat guys! 💻 #TeknikITDel #CodingLife',
+      'Break time di taman kampus, asik banget! 🌿 #CampusLife #ITDel',
+      'Persiapan UTS, semangat Pengguna! 📝 #BelajarBareng #KampusITDel',
+      'Sharing ilmu bareng teman-teman di lab 🔬 #SharingIsCaring #PenggunaSpirit',
+    ];
+    return captions[index % captions.length];
   }
 }
