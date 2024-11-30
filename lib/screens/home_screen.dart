@@ -1,3 +1,4 @@
+import 'package:delconnect/screens/message_screen.dart';
 import 'package:delconnect/screens/profile_screen.dart';
 import 'package:delconnect/screens/search_screen.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'dart:ui';
 import '../constants/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../providers/navigation_state.dart';
+import 'package:delconnect/screens/notification_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -199,14 +201,25 @@ class _HomeScreenState extends State<HomeScreen>
             Iconsax.heart, // Changed from Icons.favorite_border
             color: isDark ? AppTheme.darkText : AppTheme.lightText,
           ),
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const NotificationScreen()),
+            );
+          },
         ),
         IconButton(
           icon: Icon(
             Iconsax.message, // Changed from Icons.chat_rounded
             color: isDark ? AppTheme.darkText : AppTheme.lightText,
           ),
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MessageScreen()),
+            );
+          },
         ),
         const SizedBox(width: 16),
       ],

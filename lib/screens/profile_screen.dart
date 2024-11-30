@@ -20,54 +20,10 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool _isScrollingDown = false;
   double _lastScrollPosition = 0;
 
-  // Add new animation controllers
-  late AnimationController _profileImageController;
-  late AnimationController _headerController;
-  late AnimationController _statsController;
-  late AnimationController _bioController;
-  late AnimationController _gridController;
-
   @override
   void initState() {
     super.initState();
-    // Initialize animation controllers
-    _profileImageController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    _headerController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
-    _statsController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
-    _bioController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    );
-    _gridController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1600),
-    );
-
-    // Start animations sequentially
-    _startAnimations();
     _scrollController.addListener(_onScroll);
-  }
-
-  void _startAnimations() async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    _profileImageController.forward();
-    await Future.delayed(const Duration(milliseconds: 200));
-    _headerController.forward();
-    await Future.delayed(const Duration(milliseconds: 200));
-    _statsController.forward();
-    await Future.delayed(const Duration(milliseconds: 200));
-    _bioController.forward();
-    await Future.delayed(const Duration(milliseconds: 200));
-    _gridController.forward();
   }
 
   void _onScroll() {
@@ -91,11 +47,8 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   void dispose() {
-    _profileImageController.dispose();
-    _headerController.dispose();
-    _statsController.dispose();
-    _bioController.dispose();
-    _gridController.dispose();
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -228,106 +181,83 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildProfileHeader(bool isDark) {
-    return SlideTransition(
-      position: Tween<Offset>(
-        begin: const Offset(0, 0.5),
-        end: Offset.zero,
-      ).animate(CurvedAnimation(
-        parent: _headerController,
-        curve: Curves.easeOutCubic,
-      )),
-      child: FadeTransition(
-        opacity: _headerController,
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  TweenAnimationBuilder(
-                    tween: Tween<double>(begin: 0, end: 1),
-                    duration: const Duration(milliseconds: 800),
-                    builder: (context, value, child) {
-                      return Transform.scale(
-                        scale: value,
-                        child: Container(
-                          padding: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [Colors.purple, Colors.blue.shade600],
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.purple.withOpacity(0.3),
-                                blurRadius: 12,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                          child: CircleAvatar(
-                            radius: 40,
-                            backgroundColor:
-                                isDark ? Colors.black : Colors.white,
-                            child: const CircleAvatar(
-                              radius: 38,
-                              backgroundImage:
-                                  NetworkImage('https://picsum.photos/200'),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
+              Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [Colors.purple, Colors.blue.shade600],
                   ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.purple.withOpacity(0.3),
+                      blurRadius: 12,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  radius: 40,
+                  backgroundColor: isDark ? Colors.black : Colors.white,
+                  child: const CircleAvatar(
+                    radius: 38,
+                    backgroundImage: NetworkImage('https://picsum.photos/200'),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Jody Pangaribuan',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    Text(
+                      '@jody.drian  ',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: (isDark ? Colors.white : Colors.black)
+                            .withOpacity(0.7),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
                       children: [
-                        Text(
-                          'Jody Pangaribuan',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black,
-                          ),
+                        Icon(
+                          Iconsax.location,
+                          size: 16,
+                          color: isDark ? Colors.white70 : Colors.black54,
                         ),
+                        const SizedBox(width: 4),
                         Text(
-                          '@jody.drian  ',
+                          'Institut Teknologi Del',
                           style: TextStyle(
-                            fontSize: 16,
-                            color: (isDark ? Colors.white : Colors.black)
-                                .withOpacity(0.7),
+                            color: isDark ? Colors.white70 : Colors.black54,
+                            fontSize: 14,
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Icon(
-                              Iconsax.location,
-                              size: 16,
-                              color: isDark ? Colors.white70 : Colors.black54,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Institut Teknologi Del',
-                              style: TextStyle(
-                                color: isDark ? Colors.white70 : Colors.black54,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
                         ),
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
-              _buildQuickActions(isDark),
             ],
           ),
-        ),
+          const SizedBox(height: 16),
+          _buildQuickActions(isDark),
+        ],
       ),
     );
   }
@@ -344,70 +274,47 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildActionButton(IconData icon, String label, bool isDark) {
-    return TweenAnimationBuilder(
-      tween: Tween<double>(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 600),
-      builder: (context, value, child) {
-        return Transform.scale(
-          scale: value,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color:
-                      (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-                  blurRadius: 8,
-                  spreadRadius: 1,
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Icon(icon,
-                    size: 16, color: isDark ? Colors.white : Colors.black),
-                const SizedBox(width: 8),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark ? Colors.white : Colors.black,
-                  ),
-                ),
-              ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+            blurRadius: 8,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: isDark ? Colors.white : Colors.black),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: isDark ? Colors.white : Colors.black,
             ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 
   Widget _buildStats(bool isDark) {
-    return SlideTransition(
-      position: Tween<Offset>(
-        begin: const Offset(-0.5, 0),
-        end: Offset.zero,
-      ).animate(CurvedAnimation(
-        parent: _statsController,
-        curve: Curves.easeOutCubic,
-      )),
-      child: FadeTransition(
-        opacity: _statsController,
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildStatItem('128', 'Postingan', isDark),
-              _buildStatDivider(isDark),
-              _buildStatItem('1.2K', 'Pengikut', isDark),
-              _buildStatDivider(isDark),
-              _buildStatItem('845', 'Mengikuti', isDark),
-            ],
-          ),
-        ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildStatItem('128', 'Postingan', isDark),
+          _buildStatDivider(isDark),
+          _buildStatItem('1.2K', 'Pengikut', isDark),
+          _buildStatDivider(isDark),
+          _buildStatItem('845', 'Mengikuti', isDark),
+        ],
       ),
     );
   }
@@ -445,46 +352,34 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildBio(bool isDark) {
-    return SlideTransition(
-      position: Tween<Offset>(
-        begin: const Offset(0.5, 0),
-        end: Offset.zero,
-      ).animate(CurvedAnimation(
-        parent: _bioController,
-        curve: Curves.easeOutCubic,
-      )),
-      child: FadeTransition(
-        opacity: _bioController,
-        child: Container(
-          margin: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '11323025 • Teknologi Informasi 23',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white : Colors.black,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Mahasiswa IT Del',
-                style: TextStyle(
-                  color: isDark ? Colors.white70 : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'MarTuhan, MarRoha, MarBisnis 🎓\nPejuang Deadline 💻\nKampus Hijau 🌱',
-                style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black,
-                  height: 1.4,
-                ),
-              ),
-            ],
+    return Container(
+      margin: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '11323025 • Teknologi Informasi 23',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white : Colors.black,
+            ),
           ),
-        ),
+          const SizedBox(height: 4),
+          Text(
+            'Mahasiswa IT Del',
+            style: TextStyle(
+              color: isDark ? Colors.white70 : Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'MarTuhan, MarRoha, MarBisnis 🎓\nPejuang Deadline 💻\nKampus Hijau 🌱',
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black,
+              height: 1.4,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -500,82 +395,62 @@ class _ProfileScreenState extends State<ProfileScreen>
         ),
         delegate: SliverChildBuilderDelegate(
           (context, index) {
-            // Fix the interval calculation
-            final startInterval = (index * 0.1).clamp(0.0, 0.9);
-            final endInterval = (startInterval + 0.1).clamp(0.0, 1.0);
-
-            return SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.2),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: _gridController,
-                curve: Interval(
-                  startInterval,
-                  endInterval,
-                  curve: Curves.easeOutCubic,
-                ),
-              )),
-              child: FadeTransition(
-                opacity: _gridController,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 8,
-                        spreadRadius: 0,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+            return Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 2),
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Image.network(
-                          'https://picsum.photos/200?random=$index',
-                          fit: BoxFit.cover,
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.network(
+                      'https://picsum.photos/200?random=$index',
+                      fit: BoxFit.cover,
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.5),
+                          ],
                         ),
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black.withOpacity(0.5),
-                              ],
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 8,
+                      left: 8,
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Iconsax.heart5,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${(index + 1) * 11}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ),
-                        Positioned(
-                          bottom: 8,
-                          left: 8,
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Iconsax.heart5,
-                                color: Colors.white,
-                                size: 16,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${(index + 1) * 11}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             );
