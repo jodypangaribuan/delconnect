@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui';
-import 'package:provider/provider.dart';
 import '../constants/app_theme.dart';
-import '../providers/navigation_state.dart';
 import 'package:iconsax/iconsax.dart';
 
 class MessageScreen extends StatefulWidget {

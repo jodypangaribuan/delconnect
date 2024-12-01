@@ -9,7 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:iconsax/iconsax.dart';
 import '../routes/app_routes.dart';
 import '../utils/logger.dart';
-import '../widgets/shadcn_button.dart';
+import '../widgets/my_button.dart';
 import '../constants/app_theme.dart';
 
 class RegisterScreen extends StatefulWidget {

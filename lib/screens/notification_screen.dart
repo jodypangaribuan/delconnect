@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui';
 import '../constants/app_theme.dart';
-import 'package:iconsax/iconsax.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});

@@ -11,6 +11,7 @@ import '../constants/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../providers/navigation_state.dart';
 import 'package:delconnect/screens/notification_screen.dart';
+import '../widgets/navigation.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen>
   bool _isScrolled = false;
   bool _isScrollingDown = false;
   double _lastScrollPosition = 0;
+  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -122,7 +124,17 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
             ),
-            bottomNavigationBar: _buildBottomNavBar(isDark),
+            bottomNavigationBar: AnimatedSlide(
+              duration: const Duration(milliseconds: 200),
+              offset:
+                  _isScrollingDown ? const Offset(0, 1) : const Offset(0, 0),
+              child: SharedBottomNavigation(
+                currentIndex: _currentIndex,
+                onIndexChanged: (index) =>
+                    setState(() => _currentIndex = index),
+                isDark: isDark,
+              ),
+            ),
           ),
           // Add blur effect to status bar area
           Positioned(
@@ -180,7 +192,7 @@ class _HomeScreenState extends State<HomeScreen>
       title: Row(
         children: [
           Image.asset(
-            'assets/logo.png', // Make sure to add your logo in assets
+            'assets/logo.png',
             height: 32,
           ),
           const SizedBox(width: 8),
@@ -600,20 +612,28 @@ class _HomeScreenState extends State<HomeScreen>
                 child: BottomNavigationBar(
                   currentIndex: navigationState.currentIndex,
                   onTap: (index) {
-                    // Update the shared navigation state
-                    context.read<NavigationState>().updateIndex(index);
                     if (index == 1) {
+                      // Preserve current index before navigating to search
+                      final currentIndex = navigationState.currentIndex;
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                             builder: (context) => const SearchScreen()),
-                      );
-                    } else if (index == 3) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const ProfileScreen()),
-                      );
+                      ).then((_) {
+                        // Restore previous index after returning from search
+                        context
+                            .read<NavigationState>()
+                            .updateIndex(currentIndex);
+                      });
+                    } else {
+                      context.read<NavigationState>().updateIndex(index);
+                      if (index == 3) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const ProfileScreen()),
+                        );
+                      }
                     }
                   },
                   elevation: 0,

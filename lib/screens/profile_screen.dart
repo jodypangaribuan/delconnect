@@ -1,10 +1,10 @@
+import 'package:delconnect/screens/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui';
-import 'package:provider/provider.dart';
 import '../constants/app_theme.dart';
-import '../providers/navigation_state.dart';
 import 'package:iconsax/iconsax.dart';
+import '../widgets/navigation.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -19,6 +19,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool _isScrolled = false;
   bool _isScrollingDown = false;
   double _lastScrollPosition = 0;
+  int _currentIndex = 3;
 
   @override
   void initState() {
@@ -98,7 +99,17 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
               ),
             ),
-            bottomNavigationBar: _buildBottomNavBar(isDark),
+            bottomNavigationBar: AnimatedSlide(
+              duration: const Duration(milliseconds: 200),
+              offset:
+                  _isScrollingDown ? const Offset(0, 1) : const Offset(0, 0),
+              child: SharedBottomNavigation(
+                currentIndex: _currentIndex,
+                onIndexChanged: (index) =>
+                    setState(() => _currentIndex = index),
+                isDark: isDark,
+              ),
+            ),
           ),
           // Add blur effects for status bar and bottom safe area
           Positioned(
@@ -147,27 +158,16 @@ class _ProfileScreenState extends State<ProfileScreen>
       actions: [
         IconButton(
           icon: Icon(
-            Iconsax.notification_bing,
-            color: isDark ? Colors.white : Colors.black,
-            size: 24,
-          ),
-          onPressed: () {},
-        ),
-        IconButton(
-          icon: Icon(
             Iconsax.setting_2,
             color: isDark ? Colors.white : Colors.black,
             size: 24,
           ),
-          onPressed: () {},
-        ),
-        IconButton(
-          icon: Icon(
-            Iconsax.share,
-            color: isDark ? Colors.white : Colors.black,
-            size: 24,
-          ),
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SettingsScreen()),
+            );
+          },
         ),
       ],
       elevation: 0,
@@ -456,79 +456,6 @@ class _ProfileScreenState extends State<ProfileScreen>
             );
           },
           childCount: 30,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomNavBar(bool isDark) {
-    return AnimatedSlide(
-      duration: const Duration(milliseconds: 200),
-      offset: _isScrollingDown ? const Offset(0, 1) : const Offset(0, 0),
-      child: Consumer<NavigationState>(
-        builder: (context, navigationState, child) => Container(
-          height: kBottomNavigationBarHeight,
-          decoration: BoxDecoration(
-            color: (isDark ? Colors.black : Colors.white).withOpacity(0.5),
-            border: Border(
-              top: BorderSide(
-                color: (isDark ? Colors.white : Colors.black).withOpacity(0.12),
-                width: 0.5,
-              ),
-            ),
-          ),
-          child: ClipRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Container(
-                color: (isDark ? Colors.black : Colors.white).withOpacity(0.3),
-                child: BottomNavigationBar(
-                  currentIndex: navigationState.currentIndex,
-                  onTap: (index) {
-                    context.read<NavigationState>().updateIndex(index);
-                    if (index != 3) {
-                      Navigator.pop(context);
-                    }
-                  },
-                  elevation: 0,
-                  backgroundColor: Colors.transparent,
-                  selectedItemColor:
-                      isDark ? AppTheme.darkText : AppTheme.lightText,
-                  unselectedItemColor:
-                      (isDark ? AppTheme.darkText : AppTheme.lightText)
-                          .withOpacity(0.5),
-                  type: BottomNavigationBarType.fixed,
-                  showSelectedLabels: true,
-                  showUnselectedLabels: true,
-                  selectedFontSize: 10.0,
-                  unselectedFontSize: 10.0,
-                  iconSize: 24.0,
-                  items: const [
-                    BottomNavigationBarItem(
-                      icon: Icon(Iconsax.home),
-                      activeIcon: Icon(Iconsax.home_15),
-                      label: 'Home',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(Iconsax.search_normal),
-                      activeIcon: Icon(Iconsax.search_normal_1),
-                      label: 'Search',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(Iconsax.discover),
-                      activeIcon: Icon(Iconsax.discover_1),
-                      label: 'Explore',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(Iconsax.profile_circle),
-                      activeIcon: Icon(Iconsax.profile_circle5),
-                      label: 'Profile',
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
         ),
       ),
     );
