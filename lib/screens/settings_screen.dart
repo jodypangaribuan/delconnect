@@ -1,7 +1,12 @@
+import 'package:delconnect/screens/appearance_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import '../constants/app_theme.dart';
 import 'dart:ui';
+import 'package:delconnect/screens/edit_profile_screen.dart'; // Add this import
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:delconnect/screens/login_screen.dart'; // Ensure you have this screen
+import '../services/auth_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -44,7 +49,7 @@ class SettingsScreen extends StatelessWidget {
                 centerTitle: true,
               ),
               SliverToBoxAdapter(
-                child: _buildSettingsList(isDark),
+                child: _buildSettingsList(context, isDark),
               ),
             ],
           ),
@@ -53,7 +58,7 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingsList(bool isDark) {
+  Widget _buildSettingsList(BuildContext context, bool isDark) {
     final List<Map<String, dynamic>> settingsItems = [
       {
         'icon': Iconsax.user,
@@ -66,19 +71,15 @@ class SettingsScreen extends StatelessWidget {
         'subtitle': 'Kelola pengaturan privasi akun',
       },
       {
-        'icon': Iconsax.notification,
-        'title': 'Notifikasi',
-        'subtitle': 'Atur preferensi notifikasi',
-      },
-      {
         'icon': Iconsax.colorfilter,
         'title': 'Tampilan',
         'subtitle': 'Sesuaikan tema dan tampilan',
-      },
-      {
-        'icon': Iconsax.shield_tick,
-        'title': 'Keamanan Akun',
-        'subtitle': 'Verifikasi dua langkah & keamanan',
+        'onTap': () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AppearanceScreen()),
+          );
+        },
       },
       {
         'icon': Iconsax.info_circle,
@@ -142,12 +143,172 @@ class SettingsScreen extends StatelessWidget {
                 size: 16,
               ),
               onTap: () {
-                // Implement settings actions here
+                if (item['title'] == 'Edit Profil') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const EditProfileScreen()),
+                  );
+                } else if (item['title'] == 'Keluar') {
+                  _showLogoutModal(context, isDark);
+                } else if (item['onTap'] != null) {
+                  item['onTap']();
+                }
+                // Handle other menu items...
               },
             ),
           );
         }).toList(),
       ),
+    );
+  }
+
+  void _showLogoutModal(BuildContext context, bool isDark) {
+    final AuthService _authService = AuthService();
+
+    showGeneralDialog(
+      context: context,
+      pageBuilder: (_, __, ___) => Container(),
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return ScaleTransition(
+          scale: Tween<double>(begin: 0.5, end: 1.0).animate(animation),
+          child: FadeTransition(
+            opacity: animation,
+            child: AlertDialog(
+              backgroundColor: isDark ? Colors.grey[900] : Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              contentPadding: EdgeInsets.zero,
+              content: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.purple.withOpacity(0.1),
+                      Colors.blue.withOpacity(0.1),
+                    ],
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.red.withOpacity(0.1),
+                      ),
+                      child: const Icon(
+                        Iconsax.logout,
+                        color: Colors.red,
+                        size: 32,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Keluar dari Akun',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Apakah kamu yakin ingin keluar?',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: isDark ? Colors.white70 : Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              backgroundColor: Colors.grey.withOpacity(0.2),
+                            ),
+                            onPressed: () => Navigator.pop(context),
+                            child: Text(
+                              'Batal',
+                              style: TextStyle(
+                                color: isDark ? Colors.white : Colors.black,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextButton(
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              backgroundColor: Colors.red,
+                            ),
+                            onPressed: () async {
+                              try {
+                                await _authService.signOut();
+                                if (context.mounted) {
+                                  // Clear navigation stack and go to login
+                                  Navigator.of(context).pushAndRemoveUntil(
+                                    MaterialPageRoute(
+                                      builder: (context) => const LoginScreen(),
+                                    ),
+                                    (route) => false,
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Terjadi kesalahan: ${e.toString()}',
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                      backgroundColor: Colors.red,
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            child: const Text(
+                              'Keluar',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+      transitionDuration: const Duration(milliseconds: 300),
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.black.withOpacity(0.5),
     );
   }
 }

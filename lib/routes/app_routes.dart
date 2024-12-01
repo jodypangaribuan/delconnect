@@ -7,7 +7,6 @@ import '../screens/explore_screen.dart';
 import '../screens/profile_screen.dart';
 
 class AppRoutes {
-  static const String initial = '/';
   static const String login = '/login';
   static const String register = '/register';
   static const String home = '/home';
@@ -16,7 +15,6 @@ class AppRoutes {
   static const String profile = '/profile';
 
   static Map<String, WidgetBuilder> get routes => {
-        initial: (context) => const HomeScreen(),
         login: (context) => const LoginScreen(),
         register: (context) => const RegisterScreen(),
         home: (context) => const HomeScreen(),

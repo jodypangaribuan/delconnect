@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'routes/app_routes.dart';
 import 'constants/app_theme.dart';
 import 'providers/navigation_state.dart';
+import 'screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,8 +34,11 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      initialRoute: AppRoutes.login, // Changed from initial to login
-      routes: AppRoutes.routes,
+      initialRoute: '/', // Add this line
+      routes: {
+        '/': (context) => const SplashScreen(),
+        ...AppRoutes.routes,
+      },
       onGenerateRoute: AppRoutes.onGenerateRoute,
     );
   }

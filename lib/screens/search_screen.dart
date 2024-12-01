@@ -92,38 +92,45 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _buildSearchHeader(bool isDark) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Row(
         children: [
-          IconButton(
-            icon: Icon(
-              Iconsax.arrow_left,
-              color: isDark ? Colors.white : Colors.black,
+          Container(
+            decoration: BoxDecoration(
+              color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
-            onPressed: () {
-              Navigator.pop(context);
-              // No need to update navigation state as we're just popping
-            },
+            child: IconButton(
+              icon: Icon(
+                Iconsax.arrow_left,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+              onPressed: () => Navigator.pop(context),
+            ),
           ),
+          const SizedBox(width: 12),
           Expanded(
             child: Container(
-              height: 45,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              height: 48,
               decoration: BoxDecoration(
-                color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(25),
+                color: (isDark ? Colors.white : Colors.black).withOpacity(0.08),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color:
                       (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+                  width: 1.5,
                 ),
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Iconsax.search_normal,
-                    color:
-                        (isDark ? Colors.white : Colors.black).withOpacity(0.5),
-                    size: 20,
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16),
+                    child: Icon(
+                      Iconsax.search_normal,
+                      color: (isDark ? Colors.white : Colors.black)
+                          .withOpacity(0.5),
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -133,17 +140,20 @@ class _SearchScreenState extends State<SearchScreen> {
                           setState(() => _isSearching = value.isNotEmpty),
                       style: TextStyle(
                         color: isDark ? Colors.white : Colors.black,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
                       ),
                       decoration: InputDecoration(
-                        hintText: 'Cari postingan, teman, atau topik...',
+                        hintText: 'Cari apa saja...',
                         hintStyle: TextStyle(
                           color: (isDark ? Colors.white : Colors.black)
                               .withOpacity(0.5),
-                          fontSize: 14,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400,
                         ),
                         border: InputBorder.none,
                         contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 16),
+                            const EdgeInsets.symmetric(vertical: 12),
                       ),
                     ),
                   ),
@@ -158,8 +168,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _buildCategories(bool isDark) {
     return Container(
-      height: 100,
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      height: 110,
+      padding: const EdgeInsets.only(bottom: 16),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: _categories.length,
@@ -170,19 +180,25 @@ class _SearchScreenState extends State<SearchScreen> {
             onTap: () => setState(() => _selectedCategory = index),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
-              margin: const EdgeInsets.only(right: 16),
-              width: 80,
+              margin: const EdgeInsets.only(right: 12),
+              width: 85,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? Colors.blue
-                    : (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
+                    ? AppTheme.lightAccent
+                    : (isDark ? Colors.white : Colors.black).withOpacity(0.08),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isSelected
+                      ? AppTheme.lightAccent
+                      : (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+                  width: 1.5,
+                ),
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: Colors.blue.withOpacity(0.3),
+                          color: AppTheme.lightAccent.withOpacity(0.3),
                           blurRadius: 8,
-                          spreadRadius: 2,
+                          offset: const Offset(0, 4),
                         )
                       ]
                     : null,
@@ -196,6 +212,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         ? Colors.white
                         : (isDark ? Colors.white : Colors.black)
                             .withOpacity(0.7),
+                    size: 24,
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -205,8 +222,11 @@ class _SearchScreenState extends State<SearchScreen> {
                           ? Colors.white
                           : (isDark ? Colors.white : Colors.black)
                               .withOpacity(0.7),
-                      fontSize: 12,
+                      fontSize: 13,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.w500,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
@@ -218,8 +238,92 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildSearchResults(bool isDark) {
-    // Implementation for search results
-    return _buildMasonryGrid(isDark);
+    if (_searchController.text.isEmpty) return const SizedBox();
+
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              childAspectRatio: 0.8,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => _buildSearchResultCard(isDark, index),
+              childCount: 10, // Example count
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSearchResultCard(bool isDark, int index) {
+    return Container(
+      decoration: BoxDecoration(
+        color: (isDark ? Colors.white : Colors.black).withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+          width: 1.5,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {},
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[800],
+                      // Add placeholder image or content here
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Result ${index + 1}',
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Subtitle description',
+                        style: TextStyle(
+                          color: (isDark ? Colors.white : Colors.black)
+                              .withOpacity(0.7),
+                          fontSize: 13,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildInteractiveGrid(bool isDark) {
