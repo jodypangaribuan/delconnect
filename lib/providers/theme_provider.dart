@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 enum ThemePreference { system, light, dark }
 
-enum AccentColor { default_, purple, green, orange }
+enum AccentColor { blue, purple, green, orange, red, pink }
 
 enum FontFamily { default_, roboto, poppins, montserrat }
 
@@ -14,7 +14,7 @@ class ThemeProvider with ChangeNotifier {
 
   late SharedPreferences _prefs;
   ThemePreference _themePreference = ThemePreference.system;
-  AccentColor _accentColor = AccentColor.default_;
+  AccentColor _accentColor = AccentColor.blue;
   FontFamily _fontFamily = FontFamily.default_;
   FontFamily get fontFamily => _fontFamily;
 
@@ -43,7 +43,7 @@ class ThemeProvider with ChangeNotifier {
     } catch (e) {
       // If there's any error, reset to defaults
       _themePreference = ThemePreference.system;
-      _accentColor = AccentColor.default_;
+      _accentColor = AccentColor.blue;
       _fontFamily = FontFamily.default_;
 
       // Clear any corrupted preferences
@@ -87,5 +87,22 @@ class ThemeProvider with ChangeNotifier {
     return themeMode == ThemeMode.dark ||
         (themeMode == ThemeMode.system &&
             MediaQuery.of(context).platformBrightness == Brightness.dark);
+  }
+
+  Color getAccentColor() {
+    switch (_accentColor) {
+      case AccentColor.blue:
+        return Colors.blue;
+      case AccentColor.purple:
+        return Colors.purple;
+      case AccentColor.green:
+        return Colors.green;
+      case AccentColor.orange:
+        return Colors.orange;
+      case AccentColor.red:
+        return Colors.red;
+      case AccentColor.pink:
+        return Colors.pink;
+    }
   }
 }

@@ -47,6 +47,7 @@ class SettingsScreen extends StatelessWidget {
                 title: Text(
                   'Pengaturan',
                   style: TextStyle(
+                    fontFamily: 'Inter',
                     color: isDark ? Colors.white : Colors.black,
                     fontWeight: FontWeight.bold,
                   ),
@@ -131,6 +132,7 @@ class SettingsScreen extends StatelessWidget {
               title: Text(
                 item['title'],
                 style: TextStyle(
+                  fontFamily: 'Inter',
                   color: item['isLogout'] == true
                       ? Colors.red
                       : (isDark ? Colors.white : Colors.black),
@@ -140,6 +142,7 @@ class SettingsScreen extends StatelessWidget {
               subtitle: Text(
                 item['subtitle'],
                 style: TextStyle(
+                  fontFamily: 'Inter',
                   color:
                       (isDark ? Colors.white : Colors.black).withOpacity(0.6),
                   fontSize: 12,
@@ -175,7 +178,7 @@ class SettingsScreen extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     final isDark = themeProvider.isDark(context);
 
-    final AuthService _authService = AuthService();
+    final AuthService authService = AuthService();
 
     showGeneralDialog(
       context: context,
@@ -222,6 +225,7 @@ class SettingsScreen extends StatelessWidget {
                     Text(
                       'Keluar dari Akun',
                       style: TextStyle(
+                        fontFamily: 'Inter',
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: isDark ? Colors.white : Colors.black,
@@ -232,6 +236,7 @@ class SettingsScreen extends StatelessWidget {
                       'Apakah kamu yakin ingin keluar?',
                       textAlign: TextAlign.center,
                       style: TextStyle(
+                        fontFamily: 'Inter',
                         color: isDark ? Colors.white70 : Colors.black87,
                       ),
                     ),
@@ -251,6 +256,7 @@ class SettingsScreen extends StatelessWidget {
                             child: Text(
                               'Batal',
                               style: TextStyle(
+                                fontFamily: 'Inter',
                                 color: isDark ? Colors.white : Colors.black,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -269,7 +275,7 @@ class SettingsScreen extends StatelessWidget {
                             ),
                             onPressed: () async {
                               try {
-                                await _authService.signOut();
+                                await authService.signOut();
                                 if (context.mounted) {
                                   // Clear navigation stack and go to login
                                   Navigator.of(context).pushAndRemoveUntil(
@@ -301,6 +307,7 @@ class SettingsScreen extends StatelessWidget {
                             child: const Text(
                               'Keluar',
                               style: TextStyle(
+                                fontFamily: 'Inter',
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
                               ),

@@ -43,8 +43,6 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                         _buildThemeSection(isDark),
                         const SizedBox(height: 24),
                         _buildAccentColorSection(isDark),
-                        const SizedBox(height: 24),
-                        _buildFontSection(isDark),
                       ],
                     ),
                   ),
@@ -161,22 +159,20 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
 
   Widget _buildThemeCard(String value, IconData icon, String label, bool isDark,
       bool isSelected, VoidCallback onTap) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return GestureDetector(
-      onTap: () {
-        // Use listen: false for event handlers
-        final themeProvider =
-            Provider.of<ThemeProvider>(context, listen: false);
-        onTap();
-      },
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.blue.withOpacity(0.2)
+              ? themeProvider.getAccentColor().withOpacity(0.2)
               : (isDark ? Colors.white : Colors.black).withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? Colors.blue : Colors.transparent,
+            color: isSelected
+                ? themeProvider.getAccentColor()
+                : Colors.transparent,
             width: 2,
           ),
         ),
@@ -186,7 +182,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
             Icon(
               icon,
               color: isSelected
-                  ? Colors.blue
+                  ? themeProvider.getAccentColor()
                   : (isDark ? Colors.white : Colors.black),
               size: 28,
             ),
@@ -195,7 +191,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
               label,
               style: TextStyle(
                 color: isSelected
-                    ? Colors.blue
+                    ? themeProvider.getAccentColor()
                     : (isDark ? Colors.white : Colors.black),
                 fontSize: 12,
               ),
@@ -209,122 +205,122 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
 
   Widget _buildAccentColorSection(bool isDark) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    final colors = [
-      {'name': AccentColor.default_, 'color': Colors.blue},
-      {'name': AccentColor.purple, 'color': Colors.purple},
-      {'name': AccentColor.green, 'color': Colors.green},
-      {'name': AccentColor.orange, 'color': Colors.orange},
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle('Warna Aksen', isDark),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: colors
-              .map((color) => _buildColorOption(
-                    color['name'] as AccentColor,
-                    color['color'] as Color,
-                    isDark,
-                    themeProvider,
-                  ))
-              .toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildColorOption(AccentColor value, Color color, bool isDark,
-      ThemeProvider themeProvider) {
-    final isSelected = value == themeProvider.accentColor;
-    return GestureDetector(
-      onTap: () {
-        final themeProvider =
-            Provider.of<ThemeProvider>(context, listen: false);
-        themeProvider.setAccentColor(value);
-      },
-      child: Container(
-        padding: const EdgeInsets.all(2),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: isSelected ? color : Colors.transparent,
-            width: 2,
-          ),
-        ),
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
-          child: isSelected
-              ? const Icon(Iconsax.link, color: Colors.white, size: 20)
-              : null,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFontSection(bool isDark) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final fonts = [
-      {'name': 'Default', 'value': FontFamily.default_},
-      {'name': 'Roboto', 'value': FontFamily.roboto},
-      {'name': 'Poppins', 'value': FontFamily.poppins},
-      {'name': 'Montserrat', 'value': FontFamily.montserrat},
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle('Font', isDark),
-        const SizedBox(height: 16),
-        Column(
-          children: fonts
-              .map((font) => _buildFontOption(
-                    font['value'] as FontFamily,
-                    font['name'] as String,
-                    isDark,
-                    themeProvider,
-                  ))
-              .toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFontOption(FontFamily value, String label, bool isDark,
-      ThemeProvider themeProvider) {
-    final isSelected = value == themeProvider.fontFamily;
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: isSelected
-            ? Colors.blue.withOpacity(0.2)
-            : (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+      margin: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle('Warna Aksen', isDark),
+          const SizedBox(height: 16),
+          Column(
+            children: [
+              Row(
+                children: [
+                  _buildAccentCard(
+                    'Blue',
+                    Colors.blue,
+                    'Biru',
+                    isDark,
+                    AccentColor.blue == themeProvider.accentColor,
+                    () => themeProvider.setAccentColor(AccentColor.blue),
+                  ),
+                  _buildAccentCard(
+                    'Purple',
+                    Colors.purple,
+                    'Ungu',
+                    isDark,
+                    AccentColor.purple == themeProvider.accentColor,
+                    () => themeProvider.setAccentColor(AccentColor.purple),
+                  ),
+                  _buildAccentCard(
+                    'Green',
+                    Colors.green,
+                    'Hijau',
+                    isDark,
+                    AccentColor.green == themeProvider.accentColor,
+                    () => themeProvider.setAccentColor(AccentColor.green),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _buildAccentCard(
+                    'Orange',
+                    Colors.orange,
+                    'Oranye',
+                    isDark,
+                    AccentColor.orange == themeProvider.accentColor,
+                    () => themeProvider.setAccentColor(AccentColor.orange),
+                  ),
+                  _buildAccentCard(
+                    'Red',
+                    Colors.red,
+                    'Merah',
+                    isDark,
+                    AccentColor.red == themeProvider.accentColor,
+                    () => themeProvider.setAccentColor(AccentColor.red),
+                  ),
+                  _buildAccentCard(
+                    'Pink',
+                    Colors.pink,
+                    'Merah Muda',
+                    isDark,
+                    AccentColor.pink == themeProvider.accentColor,
+                    () => themeProvider.setAccentColor(AccentColor.pink),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
-      child: ListTile(
-        title: Text(
-          label,
-          style: TextStyle(
+    );
+  }
+
+  Widget _buildAccentCard(String value, Color color, String label, bool isDark,
+      bool isSelected, VoidCallback onTap) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
             color: isSelected
-                ? Colors.blue
-                : (isDark ? Colors.white : Colors.black),
+                ? color.withOpacity(0.2)
+                : (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected ? color : Colors.transparent,
+              width: 2,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected
+                      ? color
+                      : (isDark ? Colors.white : Colors.black),
+                  fontSize: 12,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         ),
-        trailing: isSelected
-            ? const Icon(Iconsax.tick_circle, color: Colors.blue)
-            : null,
-        onTap: () {
-          final themeProvider =
-              Provider.of<ThemeProvider>(context, listen: false);
-          themeProvider.setFontFamily(value);
-        },
       ),
     );
   }
