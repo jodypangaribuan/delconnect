@@ -7,10 +7,12 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:provider/provider.dart';
 import '../routes/app_routes.dart';
 import '../utils/logger.dart';
 import '../widgets/my_button.dart';
 import '../constants/app_theme.dart';
+import '../providers/theme_provider.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -274,7 +276,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDark(context);
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),

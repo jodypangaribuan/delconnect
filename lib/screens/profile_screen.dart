@@ -5,6 +5,8 @@ import 'dart:ui';
 import '../constants/app_theme.dart';
 import 'package:iconsax/iconsax.dart';
 import '../widgets/navigation.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -55,7 +57,10 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.themeMode == ThemeMode.dark ||
+        (themeProvider.themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: isDark
@@ -146,6 +151,10 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildAppBar(bool isDark) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.themeMode == ThemeMode.dark ||
+        (themeProvider.themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
     return SliverAppBar(
       floating: true,
       pinned: false, // Changed from true
@@ -181,6 +190,10 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildProfileHeader(bool isDark) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.themeMode == ThemeMode.dark ||
+        (themeProvider.themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
     return Container(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -304,6 +317,10 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildStats(bool isDark) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.themeMode == ThemeMode.dark ||
+        (themeProvider.themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -459,5 +476,12 @@ class _ProfileScreenState extends State<ProfileScreen>
         ),
       ),
     );
+  }
+
+  bool _isDark(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    return themeProvider.themeMode == ThemeMode.dark ||
+        (themeProvider.themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
   }
 }

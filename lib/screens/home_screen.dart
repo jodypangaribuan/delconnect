@@ -1,3 +1,4 @@
+import 'package:delconnect/providers/theme_provider.dart';
 import 'package:delconnect/screens/message_screen.dart';
 import 'package:delconnect/screens/profile_screen.dart';
 import 'package:delconnect/screens/search_screen.dart';
@@ -76,7 +77,10 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.themeMode == ThemeMode.dark ||
+        (themeProvider.themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: isDark
@@ -172,7 +176,10 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildAppBar() {
-    final isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.themeMode == ThemeMode.dark ||
+        (themeProvider.themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
     return SliverAppBar(
       floating: true,
       snap: true,
@@ -239,7 +246,10 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildStories() {
-    final isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.themeMode == ThemeMode.dark ||
+        (themeProvider.themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
     return SliverToBoxAdapter(
       child: Container(
         height: 110,
@@ -388,7 +398,10 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildPostItem(int index) {
-    final isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.themeMode == ThemeMode.dark ||
+        (themeProvider.themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
@@ -565,7 +578,10 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildIconButton(IconData icon, Color color) {
-    final isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.themeMode == ThemeMode.dark ||
+        (themeProvider.themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
     return Container(
       width: 40,
       height: 40,
@@ -587,6 +603,10 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildBottomNavBar(bool isDark) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.themeMode == ThemeMode.dark ||
+        (themeProvider.themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
     return AnimatedSlide(
       duration: const Duration(milliseconds: 200),
       offset: _isScrollingDown ? const Offset(0, 1) : const Offset(0, 0),

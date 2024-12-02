@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iconsax/iconsax.dart';
 import 'dart:ui';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 import '../constants/app_theme.dart';
 import '../widgets/navigation.dart';
 
@@ -65,7 +67,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.themeMode == ThemeMode.dark ||
+        (themeProvider.themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
 
     return Scaffold(
       extendBody: true, // Add this
@@ -129,6 +134,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   Widget _buildAppBar(bool isDark) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.themeMode == ThemeMode.dark ||
+        (themeProvider.themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
     return SliverAppBar(
       floating: true,
       backgroundColor: _isScrolled
@@ -193,6 +202,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   Widget _buildExploreItem(bool isDark, Map<String, dynamic> item) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.themeMode == ThemeMode.dark ||
+        (themeProvider.themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
     return Container(
       decoration: BoxDecoration(
         color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),

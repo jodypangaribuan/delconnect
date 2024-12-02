@@ -6,6 +6,7 @@ import 'routes/app_routes.dart';
 import 'constants/app_theme.dart';
 import 'providers/navigation_state.dart';
 import 'screens/splash_screen.dart';
+import 'providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,8 +18,11 @@ void main() async {
   ]);
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => NavigationState(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => NavigationState()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -29,17 +33,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'DelConnect',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      initialRoute: '/', // Add this line
-      routes: {
-        '/': (context) => const SplashScreen(),
-        ...AppRoutes.routes,
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, _) {
+        return MaterialApp(
+          title: 'DelConnect',
+          debugShowCheckedModeBanner: false,
+          themeMode: themeProvider.themeMode,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          initialRoute: '/',
+          routes: {
+            '/': (context) => const SplashScreen(),
+            ...AppRoutes.routes,
+          },
+          onGenerateRoute: AppRoutes.onGenerateRoute,
+        );
       },
-      onGenerateRoute: AppRoutes.onGenerateRoute,
     );
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../constants/app_theme.dart';
+import '../providers/theme_provider.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
 import 'dart:ui';
@@ -54,7 +56,8 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDark(context);
 
     return Scaffold(
       body: Container(

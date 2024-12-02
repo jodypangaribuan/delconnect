@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'dart:ui';
 import '../constants/app_theme.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -30,7 +32,10 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.themeMode == ThemeMode.dark ||
+        (themeProvider.themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
 
     return WillPopScope(
       onWillPop: () async {
@@ -91,6 +96,8 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildSearchHeader(bool isDark) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDark(context);
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Row(
@@ -167,6 +174,8 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildCategories(bool isDark) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDark(context);
     return Container(
       height: 110,
       padding: const EdgeInsets.only(bottom: 16),
@@ -253,7 +262,8 @@ class _SearchScreenState extends State<SearchScreen> {
               childAspectRatio: 0.8,
             ),
             delegate: SliverChildBuilderDelegate(
-              (context, index) => _buildSearchResultCard(isDark, index),
+              (context, index) =>
+                  _buildSearchResultCard(_isDark(context), index),
               childCount: 10, // Example count
             ),
           ),
@@ -339,7 +349,8 @@ class _SearchScreenState extends State<SearchScreen> {
           childAspectRatio: 1.1,
         ),
         itemCount: 10,
-        itemBuilder: (context, index) => _buildInteractiveItem(isDark, index),
+        itemBuilder: (context, index) =>
+            _buildInteractiveItem(_isDark(context), index),
       ),
     );
   }
@@ -520,5 +531,11 @@ class _SearchScreenState extends State<SearchScreen> {
         );
       },
     );
+  }
+
+  // Add this helper method to reduce code duplication
+  bool _isDark(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    return themeProvider.isDark(context);
   }
 }

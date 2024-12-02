@@ -7,13 +7,18 @@ import 'package:delconnect/screens/edit_profile_screen.dart'; // Add this import
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:delconnect/screens/login_screen.dart'; // Ensure you have this screen
 import '../services/auth_service.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.themeMode == ThemeMode.dark ||
+        (themeProvider.themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
 
     return Scaffold(
       backgroundColor:
@@ -59,6 +64,9 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildSettingsList(BuildContext context, bool isDark) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final isDark = themeProvider.isDark(context);
+
     final List<Map<String, dynamic>> settingsItems = [
       {
         'icon': Iconsax.user,
@@ -164,6 +172,9 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showLogoutModal(BuildContext context, bool isDark) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final isDark = themeProvider.isDark(context);
+
     final AuthService _authService = AuthService();
 
     showGeneralDialog(

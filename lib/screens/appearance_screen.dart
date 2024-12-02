@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:provider/provider.dart';
 import '../constants/app_theme.dart';
+import '../providers/theme_provider.dart';
 import 'dart:ui';
 
 class AppearanceScreen extends StatefulWidget {
@@ -11,13 +13,10 @@ class AppearanceScreen extends StatefulWidget {
 }
 
 class _AppearanceScreenState extends State<AppearanceScreen> {
-  String _selectedTheme = 'system';
-  String _selectedColor = 'default';
-  String _selectedFont = 'default';
-
   @override
   Widget build(BuildContext context) {
-    final isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDark(context);
 
     return Scaffold(
       backgroundColor:
@@ -110,6 +109,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
   }
 
   Widget _buildThemeSection(bool isDark) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       child: Column(
@@ -125,6 +125,9 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                   Iconsax.mobile,
                   'Ikuti sistem',
                   isDark,
+                  ThemePreference.system == themeProvider.themePreference,
+                  () =>
+                      themeProvider.setThemePreference(ThemePreference.system),
                 ),
               ),
               const SizedBox(width: 12),
@@ -134,6 +137,8 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                   Iconsax.sun_1,
                   'Tema terang',
                   isDark,
+                  ThemePreference.light == themeProvider.themePreference,
+                  () => themeProvider.setThemePreference(ThemePreference.light),
                 ),
               ),
               const SizedBox(width: 12),
@@ -143,6 +148,8 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                   Iconsax.moon,
                   'Tema gelap',
                   isDark,
+                  ThemePreference.dark == themeProvider.themePreference,
+                  () => themeProvider.setThemePreference(ThemePreference.dark),
                 ),
               ),
             ],
@@ -152,11 +159,15 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
     );
   }
 
-  Widget _buildThemeCard(
-      String value, IconData icon, String label, bool isDark) {
-    final isSelected = value.toLowerCase() == _selectedTheme;
+  Widget _buildThemeCard(String value, IconData icon, String label, bool isDark,
+      bool isSelected, VoidCallback onTap) {
     return GestureDetector(
-      onTap: () => setState(() => _selectedTheme = value.toLowerCase()),
+      onTap: () {
+        // Use listen: false for event handlers
+        final themeProvider =
+            Provider.of<ThemeProvider>(context, listen: false);
+        onTap();
+      },
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -197,11 +208,12 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
   }
 
   Widget _buildAccentColorSection(bool isDark) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final colors = [
-      {'name': 'Default', 'color': Colors.blue},
-      {'name': 'Purple', 'color': Colors.purple},
-      {'name': 'Green', 'color': Colors.green},
-      {'name': 'Orange', 'color': Colors.orange},
+      {'name': AccentColor.default_, 'color': Colors.blue},
+      {'name': AccentColor.purple, 'color': Colors.purple},
+      {'name': AccentColor.green, 'color': Colors.green},
+      {'name': AccentColor.orange, 'color': Colors.orange},
     ];
 
     return Column(
@@ -213,9 +225,10 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: colors
               .map((color) => _buildColorOption(
-                    (color['name'] as String).toLowerCase(),
+                    color['name'] as AccentColor,
                     color['color'] as Color,
                     isDark,
+                    themeProvider,
                   ))
               .toList(),
         ),
@@ -223,10 +236,15 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
     );
   }
 
-  Widget _buildColorOption(String value, Color color, bool isDark) {
-    final isSelected = value == _selectedColor;
+  Widget _buildColorOption(AccentColor value, Color color, bool isDark,
+      ThemeProvider themeProvider) {
+    final isSelected = value == themeProvider.accentColor;
     return GestureDetector(
-      onTap: () => setState(() => _selectedColor = value),
+      onTap: () {
+        final themeProvider =
+            Provider.of<ThemeProvider>(context, listen: false);
+        themeProvider.setAccentColor(value);
+      },
       child: Container(
         padding: const EdgeInsets.all(2),
         decoration: BoxDecoration(
@@ -252,7 +270,13 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
   }
 
   Widget _buildFontSection(bool isDark) {
-    final fonts = ['Default', 'Roboto', 'Poppins', 'Montserrat'];
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final fonts = [
+      {'name': 'Default', 'value': FontFamily.default_},
+      {'name': 'Roboto', 'value': FontFamily.roboto},
+      {'name': 'Poppins', 'value': FontFamily.poppins},
+      {'name': 'Montserrat', 'value': FontFamily.montserrat},
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,9 +286,10 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
         Column(
           children: fonts
               .map((font) => _buildFontOption(
-                    font.toLowerCase(),
-                    font,
+                    font['value'] as FontFamily,
+                    font['name'] as String,
                     isDark,
+                    themeProvider,
                   ))
               .toList(),
         ),
@@ -272,8 +297,9 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
     );
   }
 
-  Widget _buildFontOption(String value, String label, bool isDark) {
-    final isSelected = value == _selectedFont;
+  Widget _buildFontOption(FontFamily value, String label, bool isDark,
+      ThemeProvider themeProvider) {
+    final isSelected = value == themeProvider.fontFamily;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
@@ -294,7 +320,11 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
         trailing: isSelected
             ? const Icon(Iconsax.tick_circle, color: Colors.blue)
             : null,
-        onTap: () => setState(() => _selectedFont = value),
+        onTap: () {
+          final themeProvider =
+              Provider.of<ThemeProvider>(context, listen: false);
+          themeProvider.setFontFamily(value);
+        },
       ),
     );
   }

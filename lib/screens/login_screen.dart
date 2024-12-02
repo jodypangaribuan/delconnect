@@ -9,6 +9,8 @@ import '../widgets/my_button.dart';
 import '../constants/app_theme.dart';
 import 'dart:ui';
 import 'package:iconsax/iconsax.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -254,7 +256,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDark(context);
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
