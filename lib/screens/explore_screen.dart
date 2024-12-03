@@ -73,7 +73,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
             MediaQuery.of(context).platformBrightness == Brightness.dark);
 
     return Scaffold(
-      extendBody: true, // Add this
+      extendBody: true,
       backgroundColor: Colors.transparent,
       body: Container(
         decoration: BoxDecoration(
@@ -98,7 +98,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 ),
               ],
             ),
-            // Add blur effect for status bar
             Positioned(
               top: 0,
               left: 0,
@@ -172,9 +171,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
           ),
         ),
         child: const Stack(
-          children: [
-            // Add featured content here
-          ],
+          children: [],
         ),
       ),
     );
@@ -259,7 +256,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            // Add trending items here
           ],
         ),
       ),

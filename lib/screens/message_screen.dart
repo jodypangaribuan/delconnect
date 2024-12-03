@@ -239,9 +239,7 @@ class _MessageScreenState extends State<MessageScreen> {
               ),
           ],
         ),
-        onTap: () {
-          // Handle message tap
-        },
+        onTap: () {},
       ),
     );
   }

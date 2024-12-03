@@ -30,6 +30,8 @@ dependencies:
   provider: ^6.1.2
   image_picker: ^1.1.2
   http: ^1.2.2
+  cloudinary_public: ^0.23.1
+  dio: ^5.7.0
 
 dev_dependencies:
   flutter_test:

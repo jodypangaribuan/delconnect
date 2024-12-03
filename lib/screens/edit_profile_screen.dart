@@ -41,7 +41,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
     await picker.pickImage(source: ImageSource.gallery);
-    // Implement image handling logic here
   }
 
   @override
@@ -149,7 +148,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    // Save profile changes
                     Navigator.pop(context);
                   }
                 },
@@ -288,7 +286,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       child: ElevatedButton(
         onPressed: () {
           if (_formKey.currentState!.validate()) {
-            // Save profile changes
             Navigator.pop(context);
           }
         },

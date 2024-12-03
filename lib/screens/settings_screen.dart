@@ -1,11 +1,12 @@
+import 'package:delconnect/screens/about_screen.dart';
 import 'package:delconnect/screens/appearance_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import '../constants/app_theme.dart';
 import 'dart:ui';
-import 'package:delconnect/screens/edit_profile_screen.dart'; // Add this import
+import 'package:delconnect/screens/edit_profile_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:delconnect/screens/login_screen.dart'; // Ensure you have this screen
+import 'package:delconnect/screens/login_screen.dart';
 import '../services/auth_service.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
@@ -94,6 +95,12 @@ class SettingsScreen extends StatelessWidget {
         'icon': Iconsax.info_circle,
         'title': 'Tentang',
         'subtitle': 'Informasi aplikasi & kebijakan',
+        'onTap': () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AboutScreen()),
+          );
+        },
       },
       {
         'icon': Iconsax.logout,
@@ -165,7 +172,6 @@ class SettingsScreen extends StatelessWidget {
                 } else if (item['onTap'] != null) {
                   item['onTap']();
                 }
-                // Handle other menu items...
               },
             ),
           );
@@ -277,7 +283,6 @@ class SettingsScreen extends StatelessWidget {
                               try {
                                 await authService.signOut();
                                 if (context.mounted) {
-                                  // Clear navigation stack and go to login
                                   Navigator.of(context).pushAndRemoveUntil(
                                     MaterialPageRoute(
                                       builder: (context) => const LoginScreen(),

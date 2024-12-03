@@ -31,7 +31,6 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
-        // First check if the email exists and how it can be used to sign in
         final signInMethods = await FirebaseAuth.instance
             .fetchSignInMethodsForEmail(_emailController.text.trim());
 
@@ -47,7 +46,6 @@ class _LoginScreenState extends State<LoginScreen> {
           return;
         }
 
-        // If this email uses Google Sign In, show appropriate message
         if (signInMethods.contains('google.com') &&
             !signInMethods.contains('password')) {
           if (mounted) {
@@ -61,7 +59,6 @@ class _LoginScreenState extends State<LoginScreen> {
           return;
         }
 
-        // Proceed with email/password login
         await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
@@ -93,7 +90,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final GoogleSignIn googleSignIn = GoogleSignIn();
 
     try {
-      // Mendapatkan akun Google
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
       if (googleUser == null) {
@@ -101,7 +97,6 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      // Mendapatkan autentikasi dari akun Google
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
@@ -110,13 +105,10 @@ class _LoginScreenState extends State<LoginScreen> {
         idToken: googleAuth.idToken,
       );
 
-      // Melakukan sign-in ke Firebase dengan kredensial
       final userCredential =
           await FirebaseAuth.instance.signInWithCredential(credential);
 
-      // Mengecek apakah pengguna baru atau sudah terdaftar
       if (userCredential.additionalUserInfo?.isNewUser ?? false) {
-        // Jika pengguna baru, logout dan tampilkan pesan
         await FirebaseAuth.instance.signOut();
         await googleSignIn.signOut();
 
@@ -132,7 +124,6 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      // Jika pengguna sudah terdaftar, lanjutkan ke halaman beranda
       if (mounted) {
         Navigator.of(context).pushNamedAndRemoveUntil(
           AppRoutes.home,
@@ -173,12 +164,12 @@ class _LoginScreenState extends State<LoginScreen> {
     _formKey.currentState?.reset();
     _emailController.clear();
     _passwordController.clear();
-    // Clear any error messages by removing the SnackBar
+
     ScaffoldMessenger.of(context).clearSnackBars();
   }
 
   Future<void> _handleRefresh() async {
-    await Future.delayed(const Duration(milliseconds: 500)); // Shortened delay
+    await Future.delayed(const Duration(milliseconds: 500));
     if (mounted) {
       setState(() {
         _resetForm();
@@ -189,8 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
         barrierDismissible: true,
         barrierLabel: '',
         barrierColor: Colors.black45,
-        transitionDuration:
-            const Duration(milliseconds: 150), // Faster transition
+        transitionDuration: const Duration(milliseconds: 150),
         pageBuilder: (context, anim1, anim2) => Container(),
         transitionBuilder: (context, anim1, anim2, child) {
           return FadeTransition(
@@ -201,8 +191,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 curve: Curves.easeOutBack,
               ),
               child: AlertDialog(
-                backgroundColor: Colors.transparent, // Transparent background
-                elevation: 0, // No shadow
+                backgroundColor: Colors.transparent,
+                elevation: 0,
                 content: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
                   child: Row(
@@ -211,13 +201,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       TweenAnimationBuilder(
                         tween: Tween<double>(begin: 0, end: 1),
-                        duration: const Duration(
-                            milliseconds: 600), // Shorter animation
+                        duration: const Duration(milliseconds: 600),
                         builder: (context, value, child) {
                           return Transform.rotate(
                             angle: value * 2 * 3.14,
                             child: const Icon(
-                              Iconsax.refresh, // Replace refresh_rounded
+                              Iconsax.refresh,
                               color: Colors.white,
                               size: 24,
                             ),
@@ -245,7 +234,6 @@ class _LoginScreenState extends State<LoginScreen> {
         },
       );
 
-      // Shorter display duration
       Future.delayed(const Duration(milliseconds: 1500), () {
         if (mounted) {
           Navigator.of(context).pop();
@@ -379,7 +367,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   : const Color(0xFF64748B),
                             ),
                             prefixIcon: Icon(
-                              Iconsax.sms, // Replace email_outlined
+                              Iconsax.sms,
                               color: isDark
                                   ? AppTheme.darkTextSecondary
                                   : const Color(0xFF64748B),
@@ -450,7 +438,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   : const Color(0xFF64748B),
                             ),
                             prefixIcon: Icon(
-                              Iconsax.lock, // Replace lock_outline
+                              Iconsax.lock,
                               color: isDark
                                   ? AppTheme.darkTextSecondary
                                   : const Color(0xFF64748B),

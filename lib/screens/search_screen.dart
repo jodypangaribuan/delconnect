@@ -264,7 +264,7 @@ class _SearchScreenState extends State<SearchScreen> {
             delegate: SliverChildBuilderDelegate(
               (context, index) =>
                   _buildSearchResultCard(_isDark(context), index),
-              childCount: 10, // Example count
+              childCount: 10,
             ),
           ),
         ),
@@ -295,7 +295,6 @@ class _SearchScreenState extends State<SearchScreen> {
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.grey[800],
-                      // Add placeholder image or content here
                     ),
                   ),
                 ),
@@ -424,7 +423,6 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildMasonryGrid(bool isDark) {
-    // Implementation for masonry grid
     return Center(
       child: Text(
         'Masonry Grid Placeholder',
@@ -453,7 +451,7 @@ class _SearchScreenState extends State<SearchScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: 5, // Example count
+        itemCount: 5,
         itemBuilder: (context, index) {
           return Container(
             width: 200,
@@ -486,7 +484,7 @@ class _SearchScreenState extends State<SearchScreen> {
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
       ),
-      itemCount: 4, // Example count
+      itemCount: 4,
       itemBuilder: (context, index) {
         return Container(
           decoration: BoxDecoration(
@@ -511,7 +509,7 @@ class _SearchScreenState extends State<SearchScreen> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: 3, // Example count
+      itemCount: 3,
       itemBuilder: (context, index) {
         return Container(
           height: 100,
@@ -533,7 +531,6 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  // Add this helper method to reduce code duplication
   bool _isDark(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return themeProvider.isDark(context);

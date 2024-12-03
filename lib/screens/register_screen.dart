@@ -597,7 +597,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           controller: _emailController,
                           decoration: InputDecoration(
                             labelText: 'Email',
-                            hintText: 'emailkamu@student.del.ac.id',
+                            hintText: 'email-kamu@students.del.ac.id',
                             filled: true,
                             fillColor:
                                 isDark ? AppTheme.darkInput : Colors.white,
@@ -660,8 +660,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             if (value == null || value.isEmpty) {
                               return 'Email wajib diisi';
                             }
-                            if (!value.endsWith('@student.del.ac.id')) {
-                              return 'Gunakan email student.del.ac.id';
+                            if (!value.endsWith('@students.del.ac.id')) {
+                              return 'Gunakan email students.del.ac.id';
                             }
                             return null;
                           },
