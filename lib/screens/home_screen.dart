@@ -6,6 +6,7 @@ import 'package:delconnect/screens/profile_screen.dart';
 import 'package:delconnect/screens/search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
@@ -14,10 +15,13 @@ import 'package:delconnect/screens/notification_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+import 'package:intl/intl.dart';
 
 import '../constants/app_theme.dart';
 import '../providers/navigation_state.dart';
 import '../widgets/navigation.dart';
+import '../screens/create_post_screen.dart';
+import '../services/post_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,20 +34,20 @@ class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   late AnimationController _hideBottomBarAnimController;
-  bool _isScrolled = false;
+  final bool _isScrolled = false;
   bool _isScrollingDown = false;
   double _lastScrollPosition = 0;
   int _currentIndex = 0;
 
   @override
   void initState() {
+    super.initState();
     _hideBottomBarAnimController = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
     _hideBottomBarAnimController.value =
         1.0; // Add this line to show bottom bar initially
-    super.initState();
     _scrollController.addListener(_onScroll);
   }
 
@@ -56,37 +60,34 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _onScroll() {
-    double currentScrollPosition = _scrollController.position.pixels;
+    if (!mounted) return;
 
+    final currentScrollPosition = _scrollController.position.pixels;
+
+    // Hanya update bottom navigation bar visibility
     if ((currentScrollPosition > _lastScrollPosition) && !_isScrollingDown) {
-      // Scrolling DOWN
       setState(() {
         _isScrollingDown = true;
       });
     } else if ((currentScrollPosition < _lastScrollPosition) &&
         _isScrollingDown) {
-      // Scrolling UP
       setState(() {
         _isScrollingDown = false;
       });
     }
 
     _lastScrollPosition = currentScrollPosition;
-
-    if (_scrollController.offset > 0 && !_isScrolled) {
-      setState(() => _isScrolled = true);
-    } else if (_scrollController.offset <= 0 && _isScrolled) {
-      setState(() => _isScrolled = false);
-    }
   }
 
   Future<void> _handleRefresh() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (mounted) {
-      setState(() {
-        // Reset any state if needed
-      });
+    if (!mounted) return;
 
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    if (!mounted) return;
+
+    // Gunakan post-frame callback untuk menampilkan dialog
+    SchedulerBinding.instance.addPostFrameCallback((_) {
       showGeneralDialog(
         context: context,
         barrierDismissible: true,
@@ -156,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen>
           Navigator.of(context).pop();
         }
       });
-    }
+    });
   }
 
   @override
@@ -196,30 +197,20 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
               child: SafeArea(
-                bottom: false, // Add this line
-                child: LiquidPullToRefresh(
-                  onRefresh: _handleRefresh,
-                  color: isDark
-                      ? AppTheme.darkBorder
-                      : AppTheme.primaryBlue.withOpacity(0.1),
-                  backgroundColor:
-                      isDark ? AppTheme.darkBackground : Colors.white,
-                  height: 100,
-                  animSpeedFactor: 2,
-                  showChildOpacityTransition: false,
-                  child: CustomScrollView(
-                    controller: _scrollController,
-                    slivers: [
-                      _buildAppBar(),
-                      _buildStories(),
-                      SliverPadding(
-                        // Wrap _buildPosts with SliverPadding
-                        padding: const EdgeInsets.only(
-                            bottom: kBottomNavigationBarHeight + 20),
-                        sliver: _buildPosts(),
+                bottom: false,
+                child: CustomScrollView(
+                  controller: _scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    _buildAppBar(),
+                    _buildStories(),
+                    SliverPadding(
+                      padding: const EdgeInsets.only(
+                        bottom: kBottomNavigationBarHeight + 20,
                       ),
-                    ],
-                  ),
+                      sliver: _buildPosts(),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -232,6 +223,44 @@ class _HomeScreenState extends State<HomeScreen>
                 onIndexChanged: (index) =>
                     setState(() => _currentIndex = index),
                 isDark: isDark,
+              ),
+            ),
+            floatingActionButton: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.primaryBlue,
+                    AppTheme.primaryBlue.withOpacity(0.8)
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primaryBlue.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: FloatingActionButton(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const CreatePostScreen()),
+                  );
+                  if (result == true) {
+                    setState(() {});
+                  }
+                },
+                child: const Icon(
+                  Iconsax.add,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
@@ -528,199 +557,257 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildPosts() {
-    return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) => _buildPostItem(index),
-        childCount: 20,
-      ),
-    );
-  }
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final isDark = themeProvider.isDark(context);
 
-  Widget _buildPostItem(int index) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.themeMode == ThemeMode.dark ||
-        (themeProvider.themeMode == ThemeMode.system &&
-            MediaQuery.of(context).platformBrightness == Brightness.dark);
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: (isDark ? Colors.black : Colors.white).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundImage: NetworkImage(
-                          'https://picsum.photos/200?random=${index + 100}'),
-                      onBackgroundImageError: (exception, stackTrace) {
-                        return;
-                      },
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Pengguna $index', // Changed from 'User $index'
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: isDark
-                                  ? AppTheme.darkText
-                                  : AppTheme.lightText,
-                            ),
-                          ),
-                          Text(
-                            index % 2 == 0
-                                ? 'Baru saja'
-                                : 'Kemarin', // Changed from '2h ago'
-                            style: TextStyle(
-                              color: isDark
-                                  ? AppTheme.darkTextSecondary
-                                  : AppTheme.lightTextSecondary,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.more_horiz, color: Colors.white),
-                      onPressed: () {
-                        // TODO: Implement post options
-                      },
-                    ),
-                  ],
+    return StreamBuilder<QuerySnapshot>(
+      stream: PostService().getPosts(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return SliverToBoxAdapter(
+            child: Center(
+              child: Text(
+                'Error: ${snapshot.error}',
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black,
                 ),
               ),
-              Image.network(
-                'https://picsum.photos/400/300?random=${index + 200}',
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: 300,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: double.infinity,
-                    height: 300,
-                    color: isDark ? Colors.grey[900] : Colors.grey[300],
-                    child: Icon(
-                      Icons.image_not_supported_outlined,
-                      size: 50,
-                      color: isDark ? Colors.grey[700] : Colors.grey[500],
-                    ),
-                  );
-                },
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(
-                    width: double.infinity,
-                    height: 300,
-                    color: isDark ? Colors.grey[900] : Colors.grey[300],
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        value: loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                            : null,
-                      ),
-                    ),
-                  );
-                },
+            ),
+          );
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SliverToBoxAdapter(
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        final posts = snapshot.data?.docs ?? [];
+
+        if (posts.isEmpty) {
+          return SliverToBoxAdapter(
+            child: Center(
+              child: Text(
+                'Belum ada postingan',
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black,
+                ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(16),
+            ),
+          );
+        }
+
+        return SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final post = posts[index].data() as Map<String, dynamic>;
+              final postId = posts[index].id;
+              final likes = List<String>.from(post['likes'] ?? []);
+              final isLiked =
+                  likes.contains(FirebaseAuth.instance.currentUser?.uid);
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            _buildIconButton(
-                                Iconsax.heart,
-                                Colors
-                                    .white), // Changed from Icons.favorite_border
-                            const SizedBox(width: 16),
-                            _buildIconButton(
-                                Iconsax.message,
-                                Colors
-                                    .white), // Changed from Icons.chat_bubble_outline
-                            const SizedBox(width: 16),
-                            _buildIconButton(Iconsax.send_2,
-                                Colors.white), // Changed from Icons.send
-                          ],
-                        ),
-                        _buildIconButton(Iconsax.save_2,
-                            Colors.white), // Changed from Icons.bookmark_border
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${1234 - index} suka', // Changed from '1,234 likes'
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    RichText(
-                      text: TextSpan(
-                        style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black87,
-                        ),
+                    // User Info
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
                         children: [
-                          TextSpan(
-                            text:
-                                'Pengguna $index ', // Changed from 'User $index'
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          CircleAvatar(
+                            radius: 20,
+                            backgroundImage: post['userImage'] != null &&
+                                    post['userImage'].isNotEmpty
+                                ? NetworkImage(post['userImage'])
+                                : null,
+                            child: post['userImage'] == null ||
+                                    post['userImage'].isEmpty
+                                ? Text(post['userName'][0].toUpperCase())
+                                : null,
                           ),
-                          TextSpan(
-                            text: _getRandomCaption(
-                                index), // Added random captions
-                            style: TextStyle(
-                              color: isDark
-                                  ? Colors.white.withOpacity(0.9)
-                                  : Colors.black87.withOpacity(0.9),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  post['userName'] ?? '',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? Colors.white : Colors.black,
+                                  ),
+                                ),
+                                if (post['timestamp'] != null)
+                                  Text(
+                                    _getTimeAgo(post['timestamp'].toDate()),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color:
+                                          (isDark ? Colors.white : Colors.black)
+                                              .withOpacity(0.6),
+                                    ),
+                                  ),
+                              ],
                             ),
+                          ),
+                          IconButton(
+                            icon: Icon(
+                              Iconsax.more,
+                              color: isDark ? Colors.white : Colors.black,
+                            ),
+                            onPressed: () {},
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Lihat ${48 - index} komentar', // Changed from 'View all 48 comments'
-                      style: TextStyle(
-                        color: isDark
-                            ? Colors.white.withOpacity(0.6)
-                            : Colors.black87.withOpacity(0.6),
+
+                    const SizedBox(height: 12),
+
+                    // Post Images
+                    if (post['images'] != null &&
+                        (post['images'] as List).isNotEmpty)
+                      SizedBox(
+                        height: 400,
+                        width: double.infinity,
+                        child: PageView.builder(
+                          itemCount: (post['images'] as List).length,
+                          itemBuilder: (context, imageIndex) {
+                            return Image.network(
+                              post['images'][imageIndex],
+                              fit: BoxFit.cover,
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Center(
+                                  child: CircularProgressIndicator(
+                                    value: loadingProgress.expectedTotalBytes !=
+                                            null
+                                        ? loadingProgress
+                                                .cumulativeBytesLoaded /
+                                            loadingProgress.expectedTotalBytes!
+                                        : null,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      isDark ? Colors.white70 : Colors.black45,
+                                    ),
+                                  ),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) {
+                                debugPrint('Error loading image: $error');
+                                return Center(
+                                  child: Icon(
+                                    Icons.error_outline,
+                                    color: isDark
+                                        ? Colors.white60
+                                        : Colors.black45,
+                                    size: 32,
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ),
+
+                    // Actions
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => PostService().likePost(postId),
+                            child: Icon(
+                              isLiked ? Iconsax.heart5 : Iconsax.heart,
+                              color: isLiked
+                                  ? Colors.red
+                                  : (isDark ? Colors.white : Colors.black),
+                              size: 28,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Icon(
+                            Iconsax.message,
+                            color: isDark ? Colors.white : Colors.black,
+                            size: 28,
+                          ),
+                          const SizedBox(width: 16),
+                          Icon(
+                            Iconsax.share,
+                            color: isDark ? Colors.white : Colors.black,
+                            size: 28,
+                          ),
+                        ],
                       ),
                     ),
+
+                    // Likes
+                    if (likes.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          '${likes.length} suka',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black,
+                          ),
+                        ),
+                      ),
+
+                    // Caption
+                    if (post['caption'] != null && post['caption'].isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: RichText(
+                          text: TextSpan(
+                            style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black,
+                              fontSize: 14,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: '${post['userName']} ',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              TextSpan(text: post['caption']),
+                            ],
+                          ),
+                        ),
+                      ),
                   ],
                 ),
-              ),
-            ],
+              );
+            },
+            childCount: posts.length,
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
+  String _getTimeAgo(DateTime dateTime) {
+    final difference = DateTime.now().difference(dateTime);
+
+    if (difference.inDays > 7) {
+      return DateFormat('d MMM').format(dateTime);
+    } else if (difference.inDays > 0) {
+      return '${difference.inDays}h yang lalu';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}j yang lalu';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m yang lalu';
+    } else {
+      return 'Baru saja';
+    }
+  }
+
   Widget _buildIconButton(IconData icon, Color color) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.themeMode == ThemeMode.dark ||
-        (themeProvider.themeMode == ThemeMode.system &&
-            MediaQuery.of(context).platformBrightness == Brightness.dark);
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final isDark = themeProvider.isDark(context);
     return Container(
       width: 40,
       height: 40,
@@ -742,7 +829,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildBottomNavBar(bool isDark) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     final isDarkMode = themeProvider.themeMode == ThemeMode.dark ||
         (themeProvider.themeMode == ThemeMode.system &&
             MediaQuery.of(context).platformBrightness == Brightness.dark);
@@ -810,24 +897,18 @@ class _HomeScreenState extends State<HomeScreen>
                   iconSize: 24.0,
                   items: const [
                     BottomNavigationBarItem(
-                      icon: Icon(
-                          Iconsax.home), // Changed from Icons.home_outlined
-                      activeIcon:
-                          Icon(Iconsax.home_15), // Changed from Icons.home
+                      icon: Icon(Iconsax.home),
+                      activeIcon: Icon(Iconsax.home_15),
                       label: 'Home',
                     ),
                     BottomNavigationBarItem(
-                      icon: Icon(Iconsax
-                          .search_normal), // Changed from Icons.search_outlined
-                      activeIcon: Icon(
-                          Iconsax.search_normal_1), // Changed from Icons.search
+                      icon: Icon(Iconsax.search_normal),
+                      activeIcon: Icon(Iconsax.search_normal_1),
                       label: 'Search',
                     ),
                     BottomNavigationBarItem(
-                      icon: Icon(Iconsax
-                          .discover), // Changed from Icons.explore_outlined
-                      activeIcon: Icon(
-                          Iconsax.discover_1), // Changed from Icons.explore
+                      icon: Icon(Iconsax.discover),
+                      activeIcon: Icon(Iconsax.discover_1),
                       label: 'Explore',
                     ),
                     BottomNavigationBarItem(
@@ -851,7 +932,7 @@ class _HomeScreenState extends State<HomeScreen>
   String _getRandomCaption(int index) {
     final List<String> captions = [
       'Suasana seru di kampus hari ini! 🎓 #KampusHijau #ITDel',
-      'Quality time bareng squad di danau Toba 🌊 #PenggunaVibes #TobaLife',
+      'Quality time bareng squad di danau Toba �� #PenggunaVibes #TobaLife',
       'Grinding tugas di perpus, siapa yang sama? 📚 #MahasiswaKuat #ITDel',
       'Moment seru di kantin, makan bareng teman-teman 🍱 #PenggunaMoments',
       'Praktikum hari ini, semangat guys! 💻 #TeknikITDel #CodingLife',
@@ -860,5 +941,82 @@ class _HomeScreenState extends State<HomeScreen>
       'Sharing ilmu bareng teman-teman di lab 🔬 #SharingIsCaring #PenggunaSpirit',
     ];
     return captions[index % captions.length];
+  }
+
+  void _showDeleteConfirmation(
+      BuildContext context, String postId, bool isDark) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
+        title: Text(
+          'Hapus Postingan',
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black,
+          ),
+        ),
+        content: Text(
+          'Apakah Anda yakin ingin menghapus postingan ini?',
+          style: TextStyle(
+            color: isDark ? Colors.white70 : Colors.black87,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Batal',
+              style: TextStyle(
+                color: isDark ? Colors.white70 : Colors.black54,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context); // Tutup dialog
+              try {
+                await PostService().deletePost(postId);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Postingan berhasil dihapus'),
+                      backgroundColor:
+                          isDark ? AppTheme.darkSurface : Colors.black87,
+                      behavior: SnackBarBehavior.floating,
+                      margin: const EdgeInsets.all(16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  );
+                  // Refresh posts
+                  setState(() {});
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                      margin: const EdgeInsets.all(16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text(
+              'Hapus',
+              style: TextStyle(
+                color: Colors.red,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
