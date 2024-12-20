@@ -69,87 +69,73 @@ class AboutScreen extends StatelessWidget {
   }
 
   Widget _buildAppInfo(bool isDark) {
-    return Stack(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: AppTheme.commonCardDecoration(isDark),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [
+                  Colors.purple.withOpacity(0.2),
+                  Colors.blue.withOpacity(0.2),
+                ],
+              ),
+            ),
+            child: Image.asset(
+              'assets/logo.png',
+              height: 48,
+              width: 48,
             ),
           ),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.purple.withOpacity(0.2),
-                      Colors.blue.withOpacity(0.2),
-                    ],
-                  ),
-                ),
-                child: Image.asset(
-                  'assets/logo.png',
-                  height: 48,
-                  width: 48,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'DelConnect',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color:
-                      (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  'Versi 1.0.0',
-                  style: TextStyle(
-                    color:
-                        (isDark ? Colors.white : Colors.black).withOpacity(0.7),
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Media Sosial Kampus IT Del',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: isDark ? Colors.white70 : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Platform sosial yang dirancang khusus untuk memfasilitasi interaksi dan komunikasi antar mahasiswa Institut Teknologi Del dalam lingkup kampus.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color:
-                      (isDark ? Colors.white : Colors.black).withOpacity(0.6),
-                  height: 1.5,
-                ),
-              ),
-            ],
+          const SizedBox(height: 16),
+          Text(
+            'DelConnect',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black,
+              letterSpacing: 0.5,
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              'Versi 1.0.0',
+              style: TextStyle(
+                color: (isDark ? Colors.white : Colors.black).withOpacity(0.7),
+                fontSize: 12,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Media Sosial Kampus IT Del',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              color: isDark ? Colors.white70 : Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Platform sosial yang dirancang khusus untuk memfasilitasi interaksi dan komunikasi antar mahasiswa Institut Teknologi Del dalam lingkup kampus.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: (isDark ? Colors.white : Colors.black).withOpacity(0.6),
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -187,13 +173,7 @@ class AboutScreen extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-        ),
-      ),
+      decoration: AppTheme.commonCardDecoration(isDark),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -308,13 +288,7 @@ class AboutScreen extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-        ),
-      ),
+      decoration: AppTheme.commonCardDecoration(isDark),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

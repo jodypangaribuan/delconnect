@@ -38,6 +38,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
       try {
         AppLogger.log('Starting email/password registration');
 
+        // Check if email exists in Firebase Auth
+        final signInMethods = await FirebaseAuth.instance
+            .fetchSignInMethodsForEmail(_emailController.text.trim());
+        if (signInMethods.isNotEmpty) {
+          throw FirebaseAuthException(
+            code: 'email-already-in-use',
+            message: 'Email sudah terdaftar',
+          );
+        }
+
         final userCredential =
             await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
@@ -47,10 +57,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         AppLogger.log(
             'User registered successfully', userCredential.user?.email);
 
+        // Update display name
         await userCredential.user?.updateDisplayName(
             '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}');
-        AppLogger.log('Display name updated');
 
+        // Store user data in Firestore
         await FirebaseFirestore.instance
             .collection('users')
             .doc(userCredential.user?.uid)
@@ -59,8 +70,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'lastName': _lastNameController.text.trim(),
           'username': _usernameController.text.trim(),
           'email': _emailController.text.trim(),
+          'bio': '',
+          'location': 'Institut Teknologi Del',
+          'posts_count': 0,
+          'followers_count': 0,
+          'following_count': 0,
           'createdAt': FieldValue.serverTimestamp(),
+          'lastSeen': FieldValue.serverTimestamp(),
+          'isOnline': true,
         });
+
+        AppLogger.log('User data stored in Firestore');
 
         if (mounted) {
           Navigator.pushReplacementNamed(context, AppRoutes.home);
@@ -85,9 +105,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           );
         }
-      }
-      if (mounted) {
-        setState(() => _isLoading = false);
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
@@ -157,23 +178,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
         idToken: googleAuth.idToken,
       );
 
-      // Create user with Google credential
+      // Create user with Google credential and store additional info
       final userCredential =
           await FirebaseAuth.instance.signInWithCredential(credential);
 
+      // Store additional user information in Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user?.uid)
+          .set({
+        'firstName': userCredential.user?.displayName?.split(' ').first ?? '',
+        'lastName': userCredential.user?.displayName?.split(' ').last ?? '',
+        'email': userCredential.user?.email ?? '',
+        'username': userCredential.user?.email?.split('@').first ?? '',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
       AppLogger.log('Account creation successful', userCredential.user?.email);
 
-      // Sign out immediately after creating account
-      await FirebaseAuth.instance.signOut();
-
       if (mounted) {
-        // Show success message and navigate back to login
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Akun Google berhasil dibuat. Silakan login.'),
-          backgroundColor: Colors.green,
-        ));
-
-        Navigator.pop(context); // Return to login screen
+        // Navigate to home screen after successful registration
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
       }
     } catch (e, stack) {
       AppLogger.error('Sign Up error', e, stack);

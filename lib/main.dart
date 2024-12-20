@@ -1,3 +1,5 @@
+import 'package:delconnect/firebase_options.dart';
+import 'package:delconnect/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -9,23 +11,30 @@ import 'screens/splash_screen.dart';
 import 'providers/theme_provider.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    await NotificationService.initialize();
 
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
 
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => NavigationState()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-      ],
-      child: const MyApp(),
-    ),
-  );
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => NavigationState()),
+          ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ],
+        child: const MyApp(),
+      ),
+    );
+  } catch (e) {
+    print('Error initializing app: $e');
+  }
 }
 
 class MyApp extends StatelessWidget {

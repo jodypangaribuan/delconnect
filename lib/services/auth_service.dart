@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -21,17 +22,37 @@ class AuthService {
     await prefs.setBool(AUTH_STATUS_KEY, isLoggedIn);
   }
 
-  Future<UserCredential?> signIn(String email, String password) async {
+  Future<UserCredential> signIn(String email, String password) async {
     try {
-      final UserCredential userCredential =
-          await _auth.signInWithEmailAndPassword(
+      // Attempt to sign in
+      final UserCredential credential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+
+      // Update last seen
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(credential.user?.uid)
+          .update({
+        'lastSeen': FieldValue.serverTimestamp(),
+        'isOnline': true,
+      });
+
       await saveAuthStatus(true);
-      return userCredential;
-    } catch (e) {
+      return credential;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'INVALID_LOGIN_CREDENTIALS' ||
+          e.code == 'user-not-found' ||
+          e.code == 'wrong-password') {
+        throw FirebaseAuthException(
+          code: 'invalid-credential',
+          message: 'Email atau password salah',
+        );
+      }
       rethrow;
+    } catch (e) {
+      throw Exception('Terjadi kesalahan saat login');
     }
   }
 
@@ -40,6 +61,7 @@ class AuthService {
       await _auth.signOut();
       await saveAuthStatus(false);
     } catch (e) {
+      print('Sign out error: $e');
       rethrow;
     }
   }

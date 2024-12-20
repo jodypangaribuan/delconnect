@@ -1,5 +1,6 @@
 import 'package:delconnect/screens/about_screen.dart';
 import 'package:delconnect/screens/appearance_screen.dart';
+import 'package:delconnect/screens/privacy_security_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import '../constants/app_theme.dart';
@@ -74,11 +75,24 @@ class SettingsScreen extends StatelessWidget {
         'icon': Iconsax.user,
         'title': 'Edit Profil',
         'subtitle': 'Ubah informasi profil Anda',
+        'onTap': () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+          );
+        },
       },
       {
         'icon': Iconsax.security_user,
         'title': 'Privasi dan Keamanan',
         'subtitle': 'Kelola pengaturan privasi akun',
+        'onTap': () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const PrivacySecurityScreen()),
+          );
+        },
       },
       {
         'icon': Iconsax.colorfilter,

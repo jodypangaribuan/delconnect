@@ -164,11 +164,10 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? themeProvider.getAccentColor().withOpacity(0.2)
-              : (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
+        decoration: AppTheme.commonCardDecoration(
+          isDark,
+          opacity: isSelected ? 0.2 : 0.1,
+        ).copyWith(
           border: Border.all(
             color: isSelected
                 ? themeProvider.getAccentColor()
@@ -286,11 +285,10 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 6),
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? color.withOpacity(0.2)
-                : (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(16),
+          decoration: AppTheme.commonCardDecoration(
+            isDark,
+            opacity: isSelected ? 0.2 : 0.1,
+          ).copyWith(
             border: Border.all(
               color: isSelected ? color : Colors.transparent,
               width: 2,
@@ -328,11 +326,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
   Widget _buildSectionTitle(String title, bool isDark) {
     return Text(
       title,
-      style: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: isDark ? Colors.white : Colors.black,
-      ),
+      style: AppTheme.sectionTitleStyle(isDark),
     );
   }
 }

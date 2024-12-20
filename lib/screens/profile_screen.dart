@@ -1,3 +1,4 @@
+import 'package:delconnect/screens/edit_profile_screen.dart';
 import 'package:delconnect/screens/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +8,8 @@ import 'package:iconsax/iconsax.dart';
 import '../widgets/navigation.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -22,6 +25,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool _isScrollingDown = false;
   double _lastScrollPosition = 0;
   int _currentIndex = 3;
+  final _auth = FirebaseAuth.instance;
+  final _firestore = FirebaseFirestore.instance;
 
   @override
   void initState() {
@@ -92,9 +97,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   controller: _scrollController,
                   slivers: [
                     _buildAppBar(isDark),
-                    SliverToBoxAdapter(child: _buildProfileHeader(isDark)),
-                    SliverToBoxAdapter(child: _buildStats(isDark)),
-                    SliverToBoxAdapter(child: _buildBio(isDark)),
+                    SliverToBoxAdapter(child: _buildProfileContent(isDark)),
                     SliverPadding(
                       padding: const EdgeInsets.only(
                           bottom: kBottomNavigationBarHeight + 20),
@@ -189,11 +192,46 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildProfileHeader(bool isDark) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.themeMode == ThemeMode.dark ||
-        (themeProvider.themeMode == ThemeMode.system &&
-            MediaQuery.of(context).platformBrightness == Brightness.dark);
+  Widget _buildProfileContent(bool isDark) {
+    return StreamBuilder<DocumentSnapshot>(
+      stream: _firestore
+          .collection('users')
+          .doc(_auth.currentUser?.uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final userData = snapshot.data?.data() as Map<String, dynamic>?;
+        if (userData == null) {
+          return const Center(child: Text('No user data found'));
+        }
+
+        return Column(
+          children: [
+            _buildProfileHeaderContent(isDark, userData),
+            _buildStatsContent(isDark, userData),
+            _buildBioContent(isDark, userData),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildProfileHeaderContent(
+      bool isDark, Map<String, dynamic> userData) {
+    final firstName = userData['firstName'] ?? '';
+    final lastName = userData['lastName'] ?? '';
+    final username = userData['username'] ?? '';
+    final location = userData['location'] ?? 'Institut Teknologi Del';
+    final fullName = '$firstName $lastName';
+    final photoUrl = _auth.currentUser?.photoURL;
+
     return Container(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -218,9 +256,20 @@ class _ProfileScreenState extends State<ProfileScreen>
                 child: CircleAvatar(
                   radius: 40,
                   backgroundColor: isDark ? Colors.black : Colors.white,
-                  child: const CircleAvatar(
+                  child: CircleAvatar(
                     radius: 38,
-                    backgroundImage: NetworkImage('https://picsum.photos/200'),
+                    backgroundImage:
+                        const AssetImage('assets/images/default_avatar.png'),
+                    foregroundImage: photoUrl != null
+                        ? NetworkImage(photoUrl) as ImageProvider
+                        : null,
+                    onForegroundImageError: photoUrl != null
+                        ? (_, __) {
+                            if (mounted) {
+                              _auth.currentUser?.updatePhotoURL(null);
+                            }
+                          }
+                        : null,
                   ),
                 ),
               ),
@@ -230,7 +279,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Jody Pangaribuan',
+                      fullName,
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -238,7 +287,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       ),
                     ),
                     Text(
-                      '@jody.drian  ',
+                      '@$username',
                       style: TextStyle(
                         fontSize: 16,
                         color: (isDark ? Colors.white : Colors.black)
@@ -255,7 +304,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'Institut Teknologi Del',
+                          location,
                           style: TextStyle(
                             color: isDark ? Colors.white70 : Colors.black54,
                             fontSize: 14,
@@ -275,40 +324,39 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildQuickActions(bool isDark) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _buildActionButton(Iconsax.edit_2, 'Edit Profile', isDark),
-        _buildActionButton(Iconsax.share, 'Share', isDark),
-        _buildActionButton(Iconsax.bookmark, 'Saved', isDark),
-      ],
+  Widget _buildStatsContent(bool isDark, Map<String, dynamic> userData) {
+    final posts = userData['posts_count'] ?? '0';
+    final followers = userData['followers_count'] ?? '0';
+    final following = userData['following_count'] ?? '0';
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildStatItem(posts.toString(), 'Postingan', isDark),
+          _buildStatDivider(isDark),
+          _buildStatItem(followers.toString(), 'Pengikut', isDark),
+          _buildStatDivider(isDark),
+          _buildStatItem(following.toString(), 'Mengikuti', isDark),
+        ],
+      ),
     );
   }
 
-  Widget _buildActionButton(IconData icon, String label, bool isDark) {
+  Widget _buildBioContent(bool isDark, Map<String, dynamic> userData) {
+    final bio = userData['bio'] ?? '';
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-            blurRadius: 8,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      child: Row(
+      margin: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: isDark ? Colors.white : Colors.black),
-          const SizedBox(width: 8),
           Text(
-            label,
+            bio,
             style: TextStyle(
-              fontSize: 12,
               color: isDark ? Colors.white : Colors.black,
+              height: 1.4,
             ),
           ),
         ],
@@ -316,22 +364,58 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildStats(bool isDark) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.themeMode == ThemeMode.dark ||
-        (themeProvider.themeMode == ThemeMode.system &&
-            MediaQuery.of(context).platformBrightness == Brightness.dark);
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildStatItem('128', 'Postingan', isDark),
-          _buildStatDivider(isDark),
-          _buildStatItem('1.2K', 'Pengikut', isDark),
-          _buildStatDivider(isDark),
-          _buildStatItem('845', 'Mengikuti', isDark),
-        ],
+  Widget _buildQuickActions(bool isDark) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _buildActionButton(
+          Iconsax.edit_2,
+          'Edit Profile',
+          isDark,
+          onTap: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const EditProfileScreen()),
+            );
+          },
+        ),
+        _buildActionButton(Iconsax.share, 'Share', isDark),
+        _buildActionButton(Iconsax.bookmark, 'Saved', isDark),
+      ],
+    );
+  }
+
+  Widget _buildActionButton(IconData icon, String label, bool isDark,
+      {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+              blurRadius: 8,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: isDark ? Colors.white : Colors.black),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -365,39 +449,6 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildBio(bool isDark) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '11323025 • Teknologi Informasi 23',
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : Colors.black,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Mahasiswa IT Del',
-            style: TextStyle(
-              color: isDark ? Colors.white70 : Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'MarTuhan, MarRoha, MarBisnis 🎓\nPejuang Deadline 💻\nKampus Hijau 🌱',
-            style: TextStyle(
-              color: isDark ? Colors.white : Colors.black,
-              height: 1.4,
-            ),
-          ),
-        ],
-      ),
     );
   }
 

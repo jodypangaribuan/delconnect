@@ -1,9 +1,14 @@
+import 'package:delconnect/screens/chat_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import '../constants/app_theme.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
+import 'package:iconsax/iconsax.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -96,17 +101,66 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Widget _buildNotificationsList(bool isDark) {
-    return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) => _buildNotificationItem(isDark, index),
-        childCount: 20,
-      ),
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('notifications')
+          .where('userId', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+          .orderBy('timestamp', descending: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return SliverToBoxAdapter(
+            child: Center(child: Text('Error: ${snapshot.error}')),
+          );
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SliverToBoxAdapter(
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return SliverToBoxAdapter(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Iconsax.notification,
+                    size: 64,
+                    color: isDark ? Colors.white38 : Colors.black38,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Belum ada notifikasi',
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : Colors.black54,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) => _buildNotificationItem(
+              isDark,
+              snapshot.data!.docs[index],
+            ),
+            childCount: snapshot.data!.docs.length,
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildNotificationItem(bool isDark, int index) {
-    final notificationType = index % 4;
-    final timeAgo = _getRandomTime(index);
+  Widget _buildNotificationItem(bool isDark, DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    final timestamp = (data['timestamp'] as Timestamp).toDate();
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -118,9 +172,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         contentPadding: const EdgeInsets.all(12),
         leading: CircleAvatar(
           radius: 24,
-          backgroundImage: NetworkImage(
-            'https://picsum.photos/200?random=${index + 100}',
-          ),
+          backgroundImage: NetworkImage(data['senderImage'] ?? ''),
         ),
         title: RichText(
           text: TextSpan(
@@ -130,11 +182,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
             ),
             children: [
               TextSpan(
-                text: 'Pengguna ${index + 1} ',
+                text: data['senderName'],
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               TextSpan(
-                text: _getNotificationText(notificationType),
+                text: ' ${data['message']}',
                 style: TextStyle(
                   color:
                       (isDark ? Colors.white : Colors.black).withOpacity(0.8),
@@ -143,21 +195,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
             ],
           ),
         ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              timeAgo,
-              style: TextStyle(
-                color: (isDark ? Colors.white : Colors.black).withOpacity(0.5),
-                fontSize: 12,
-              ),
-            ),
-          ],
+        trailing: Text(
+          _getTimeAgo(timestamp),
+          style: TextStyle(
+            color: (isDark ? Colors.white : Colors.black).withOpacity(0.5),
+            fontSize: 12,
+          ),
         ),
-        onTap: () {
-          // Handle notification tap
-        },
+        onTap: () => _handleNotificationTap(data),
       ),
     );
   }
@@ -179,32 +224,38 @@ class _NotificationScreenState extends State<NotificationScreen> {
     );
   }
 
-  String _getNotificationText(int type) {
-    switch (type) {
-      case 0:
-        return 'menyukai postingan Anda.';
-      case 1:
-        return 'mengomentari postingan Anda: "Keren banget!"';
-      case 2:
-        return 'mulai mengikuti Anda.';
-      case 3:
-        return 'membagikan postingan Anda.';
-      default:
-        return 'berinteraksi dengan profil Anda.';
+  String _getTimeAgo(DateTime timestamp) {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+
+    if (difference.inDays > 7) {
+      return DateFormat('d MMM').format(timestamp);
+    } else if (difference.inDays > 0) {
+      return '${difference.inDays}h';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}j';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m';
+    } else {
+      return 'Baru saja';
     }
   }
 
-  String _getRandomTime(int index) {
-    final times = [
-      'Baru saja',
-      '5 menit',
-      '15 menit',
-      '1 jam',
-      '2 jam',
-      'Kemarin',
-      '2 hari',
-      '1 minggu',
-    ];
-    return times[index % times.length];
+  void _handleNotificationTap(Map<String, dynamic> data) {
+    switch (data['type']) {
+      case 'message':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatScreen(
+              receiverId: data['senderId'],
+              receiverName: data['senderName'],
+              chatRoomId: data['chatRoomId'],
+            ),
+          ),
+        );
+        break;
+      // Add other notification types as needed
+    }
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:delconnect/providers/theme_provider.dart';
 import 'package:delconnect/screens/message_screen.dart';
 import 'package:delconnect/screens/profile_screen.dart';
@@ -7,11 +9,14 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
-import 'dart:ui';
-import '../constants/app_theme.dart';
 import 'package:provider/provider.dart';
-import '../providers/navigation_state.dart';
 import 'package:delconnect/screens/notification_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+
+import '../constants/app_theme.dart';
+import '../providers/navigation_state.dart';
 import '../widgets/navigation.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -75,6 +80,85 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
+  Future<void> _handleRefresh() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (mounted) {
+      setState(() {
+        // Reset any state if needed
+      });
+
+      showGeneralDialog(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: '',
+        barrierColor: Colors.black45,
+        transitionDuration: const Duration(milliseconds: 150),
+        pageBuilder: (context, anim1, anim2) => Container(),
+        transitionBuilder: (context, anim1, anim2, child) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+
+          return FadeTransition(
+            opacity: anim1,
+            child: ScaleTransition(
+              scale: CurvedAnimation(
+                parent: anim1,
+                curve: Curves.easeOutBack,
+              ),
+              child: AlertDialog(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                content: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TweenAnimationBuilder(
+                        tween: Tween<double>(begin: 0, end: 1),
+                        duration: const Duration(milliseconds: 600),
+                        builder: (context, value, child) {
+                          return Transform.rotate(
+                            angle: value * 2 * 3.14,
+                            child: Icon(
+                              Iconsax.refresh,
+                              color: isDark
+                                  ? AppTheme.darkText
+                                  : AppTheme.lightText,
+                              size: 24,
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Halaman disegarkan',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color:
+                              isDark ? AppTheme.darkText : AppTheme.lightText,
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              ),
+            ),
+          );
+        },
+      );
+
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -113,18 +197,29 @@ class _HomeScreenState extends State<HomeScreen>
               ),
               child: SafeArea(
                 bottom: false, // Add this line
-                child: CustomScrollView(
-                  controller: _scrollController,
-                  slivers: [
-                    _buildAppBar(),
-                    _buildStories(),
-                    SliverPadding(
-                      // Wrap _buildPosts with SliverPadding
-                      padding: const EdgeInsets.only(
-                          bottom: kBottomNavigationBarHeight + 20),
-                      sliver: _buildPosts(),
-                    ),
-                  ],
+                child: LiquidPullToRefresh(
+                  onRefresh: _handleRefresh,
+                  color: isDark
+                      ? AppTheme.darkBorder
+                      : AppTheme.primaryBlue.withOpacity(0.1),
+                  backgroundColor:
+                      isDark ? AppTheme.darkBackground : Colors.white,
+                  height: 100,
+                  animSpeedFactor: 2,
+                  showChildOpacityTransition: false,
+                  child: CustomScrollView(
+                    controller: _scrollController,
+                    slivers: [
+                      _buildAppBar(),
+                      _buildStories(),
+                      SliverPadding(
+                        // Wrap _buildPosts with SliverPadding
+                        padding: const EdgeInsets.only(
+                            bottom: kBottomNavigationBarHeight + 20),
+                        sliver: _buildPosts(),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -181,6 +276,7 @@ class _HomeScreenState extends State<HomeScreen>
         (themeProvider.themeMode == ThemeMode.system &&
             MediaQuery.of(context).platformBrightness == Brightness.dark);
     return SliverAppBar(
+      automaticallyImplyLeading: false, // Add this line to remove back button
       floating: true,
       snap: true,
       backgroundColor: _isScrolled
@@ -217,7 +313,7 @@ class _HomeScreenState extends State<HomeScreen>
       actions: [
         IconButton(
           icon: Icon(
-            Iconsax.heart, // Changed from Icons.favorite_border
+            Iconsax.heart,
             color: isDark ? AppTheme.darkText : AppTheme.lightText,
           ),
           onPressed: () {
@@ -228,17 +324,60 @@ class _HomeScreenState extends State<HomeScreen>
             );
           },
         ),
-        IconButton(
-          icon: Icon(
-            Iconsax.message, // Changed from Icons.chat_rounded
-            color: isDark ? AppTheme.darkText : AppTheme.lightText,
-          ),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const MessageScreen()),
-            );
-          },
+        Stack(
+          children: [
+            IconButton(
+              icon: Icon(
+                Iconsax.message,
+                color: isDark ? AppTheme.darkText : AppTheme.lightText,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const MessageScreen()),
+                );
+              },
+            ),
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('notifications')
+                  .where('userId',
+                      isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+                  .where('type',
+                      isEqualTo: 'message') // Only count message notifications
+                  .where('isRead', isEqualTo: false)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                return Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      '${snapshot.data!.docs.length}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
         const SizedBox(width: 16),
       ],

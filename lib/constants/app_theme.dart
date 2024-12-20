@@ -189,4 +189,44 @@ class AppTheme {
     ),
     // ...other theme configurations...
   );
+
+  static BoxDecoration commonCardDecoration(bool isDark,
+      {double opacity = 0.1}) {
+    return BoxDecoration(
+      color: (isDark ? Colors.white : Colors.black).withOpacity(opacity),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: (isDark ? Colors.black : Colors.grey).withOpacity(0.1),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    );
+  }
+
+  static BoxDecoration commonGradientHeader() {
+    return BoxDecoration(
+      gradient: LinearGradient(
+        colors: [Colors.purple.withOpacity(0.8), Colors.blue.withOpacity(0.8)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+    );
+  }
+
+  static TextStyle headerTextStyle = const TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.bold,
+    color: Colors.white,
+  );
+
+  static TextStyle sectionTitleStyle(bool isDark) => TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: isDark ? Colors.white : Colors.black,
+      );
 }

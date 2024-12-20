@@ -1,0 +1,36 @@
+{
+    "indexes": [
+        {
+            "collectionGroup": "chats",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "chatRoomId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "timestamp",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "chats",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "chatRoomId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "receiverId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "isRead",
+                    "order": "ASCENDING"
+                }
+            ]
+        }
+    ]
+}

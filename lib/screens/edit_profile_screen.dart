@@ -3,6 +3,10 @@ import 'package:iconsax/iconsax.dart';
 import '../constants/app_theme.dart';
 import 'dart:ui';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../providers/theme_provider.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -13,25 +17,81 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nameController;
+  late TextEditingController _firstNameController;
+  late TextEditingController _lastNameController;
   late TextEditingController _usernameController;
   late TextEditingController _bioController;
   late TextEditingController _locationController;
+  final _auth = FirebaseAuth.instance;
+  final _firestore = FirebaseFirestore.instance;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: "Jody Pangaribuan");
-    _usernameController = TextEditingController(text: "jody.drian");
-    _bioController = TextEditingController(
-        text:
-            "MarTuhan, MarRoha, MarBisnis 🎓\nPejuang Deadline 💻\nKampus Hijau 🌱");
-    _locationController = TextEditingController(text: "Institut Teknologi Del");
+    _firstNameController = TextEditingController();
+    _lastNameController = TextEditingController();
+    _usernameController = TextEditingController();
+    _bioController = TextEditingController();
+    _locationController = TextEditingController();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        final doc = await _firestore.collection('users').doc(user.uid).get();
+        final userData = doc.data();
+        if (userData != null && mounted) {
+          setState(() {
+            _firstNameController.text = userData['firstName'] ?? '';
+            _lastNameController.text = userData['lastName'] ?? '';
+            _usernameController.text = userData['username'] ?? '';
+            _bioController.text = userData['bio'] ?? '';
+            _locationController.text = userData['location'] ?? '';
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading user data: $e');
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        await _firestore.collection('users').doc(user.uid).update({
+          'firstName': _firstNameController.text.trim(),
+          'lastName': _lastNameController.text.trim(),
+          'username': _usernameController.text.trim(),
+          'bio': _bioController.text.trim(),
+          'location': _locationController.text.trim(),
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profil berhasil diperbarui')),
+          );
+          Navigator.pop(context, true); // Return true to indicate success
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _usernameController.dispose();
     _bioController.dispose();
     _locationController.dispose();
@@ -45,7 +105,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDark(context);
 
     return Scaffold(
       backgroundColor:
@@ -72,12 +133,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         children: [
                           _buildProfileImage(isDark),
                           const SizedBox(height: 24),
-                          _buildInputField(
-                            controller: _nameController,
-                            label: 'Nama',
-                            icon: Iconsax.user,
-                            isDark: isDark,
-                          ),
+                          _buildNameFields(isDark),
                           _buildInputField(
                             controller: _usernameController,
                             label: 'Username',
@@ -141,17 +197,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   textAlign: TextAlign.center,
                 ),
               ),
-              IconButton(
-                icon: Icon(
-                  Iconsax.tick_circle,
-                  color: isDark ? Colors.white : Colors.black,
-                ),
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    Navigator.pop(context);
-                  }
-                },
-              ),
+              // Removing tick circle and adding same width as left icon for balance
+              const SizedBox(width: 48),
             ],
           ),
         ),
@@ -160,6 +207,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Widget _buildProfileImage(bool isDark) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final accentColor = themeProvider.getAccentColor();
+    final photoUrl = _auth.currentUser?.photoURL;
+
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -168,11 +219,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: LinearGradient(
-              colors: [Colors.purple, Colors.blue.shade600],
+              colors: [accentColor, accentColor.withOpacity(0.7)],
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.purple.withOpacity(0.3),
+                color: accentColor.withOpacity(0.3),
                 blurRadius: 12,
                 spreadRadius: 2,
               ),
@@ -181,7 +232,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           child: CircleAvatar(
             radius: 60,
             backgroundColor: isDark ? Colors.black : Colors.white,
-            backgroundImage: const NetworkImage('https://picsum.photos/200'),
+            child: CircleAvatar(
+              radius: 58,
+              backgroundImage:
+                  const AssetImage('assets/images/default_avatar.png'),
+              foregroundImage: photoUrl != null
+                  ? NetworkImage(photoUrl) as ImageProvider
+                  : null,
+              onForegroundImageError: photoUrl != null
+                  ? (_, __) {
+                      if (mounted) {
+                        _auth.currentUser?.updatePhotoURL(null);
+                      }
+                    }
+                  : null,
+            ),
           ),
         ),
         Positioned(
@@ -220,20 +285,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-          color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: (isDark ? Colors.black : Colors.grey).withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      decoration: AppTheme.commonCardDecoration(isDark),
       child: TextFormField(
         controller: controller,
         maxLines: maxLines,
@@ -267,28 +319,51 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
+  Widget _buildNameFields(bool isDark) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildInputField(
+            controller: _firstNameController,
+            label: 'Nama Depan',
+            icon: Iconsax.user,
+            isDark: isDark,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildInputField(
+            controller: _lastNameController,
+            label: 'Nama Belakang',
+            icon: Iconsax.user,
+            isDark: isDark,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildSaveButton(bool isDark) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final accentColor = themeProvider.getAccentColor();
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.purple, Colors.blue.shade600],
+          colors: [accentColor, accentColor.withOpacity(0.7)],
         ),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.purple.withOpacity(0.3),
+            color: accentColor.withOpacity(0.3),
             blurRadius: 12,
             spreadRadius: 2,
           ),
         ],
       ),
       child: ElevatedButton(
-        onPressed: () {
-          if (_formKey.currentState!.validate()) {
-            Navigator.pop(context);
-          }
-        },
+        onPressed: _isLoading ? null : _saveProfile,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
@@ -297,14 +372,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child: const Text(
-          'Simpan Perubahan',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
+        child: _isLoading
+            ? const CircularProgressIndicator(color: Colors.white)
+            : const Text(
+                'Simpan Perubahan',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
       ),
     );
   }

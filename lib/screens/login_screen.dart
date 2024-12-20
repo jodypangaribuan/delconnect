@@ -1,3 +1,4 @@
+import 'package:delconnect/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -31,37 +32,10 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
-        final signInMethods = await FirebaseAuth.instance
-            .fetchSignInMethodsForEmail(_emailController.text.trim());
-
-        if (signInMethods.isEmpty) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content:
-                  Text('Akun belum terdaftar. Silakan daftar terlebih dahulu.'),
-              backgroundColor: Colors.red,
-            ));
-            setState(() => _isLoading = false);
-          }
-          return;
-        }
-
-        if (signInMethods.contains('google.com') &&
-            !signInMethods.contains('password')) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text(
-                  'Akun ini terdaftar dengan Google. Silakan gunakan tombol "Masuk dengan Google".'),
-              backgroundColor: Colors.red,
-            ));
-            setState(() => _isLoading = false);
-          }
-          return;
-        }
-
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
+        final authService = AuthService();
+        await authService.signIn(
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
         );
 
         if (mounted) {
@@ -72,6 +46,15 @@ class _LoginScreenState extends State<LoginScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(_getErrorMessage(e.code)),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Terjadi kesalahan saat login'),
               backgroundColor: Colors.red,
             ),
           );
@@ -148,15 +131,15 @@ class _LoginScreenState extends State<LoginScreen> {
   String _getErrorMessage(String code) {
     switch (code) {
       case 'user-disabled':
-        return 'This account has been disabled';
-      case 'user-not-found':
-        return 'No account found with this email';
-      case 'wrong-password':
-        return 'Invalid password';
+        return 'Akun ini telah dinonaktifkan';
       case 'invalid-credential':
-        return 'Invalid credentials';
+        return 'Email atau password salah';
+      case 'invalid-email':
+        return 'Format email tidak valid';
+      case 'INVALID_LOGIN_CREDENTIALS':
+        return 'Email atau password salah';
       default:
-        return 'Sign in failed: $code';
+        return 'Terjadi kesalahan saat login';
     }
   }
 
@@ -323,7 +306,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: _emailController,
                           decoration: InputDecoration(
                             labelText: 'Email',
-                            hintText: 'nama@example.com',
+                            hintText:
+                                'email-kamu@students.del.ac.id', // Updated hint text
                             filled: true,
                             fillColor:
                                 isDark ? AppTheme.darkInput : Colors.white,
@@ -384,6 +368,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Email wajib diisi';
+                            }
+                            if (!value.endsWith('@students.del.ac.id')) {
+                              return 'Gunakan email students.del.ac.id';
                             }
                             return null;
                           },

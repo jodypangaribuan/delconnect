@@ -32,6 +32,11 @@ dependencies:
   http: ^1.2.2
   cloudinary_public: ^0.23.1
   dio: ^5.7.0
+  firebase_messaging: ^15.1.5
+  flutter_local_notifications: ^18.0.1
+  intl: ^0.20.1
+  web_socket_channel: ^3.0.1
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:
@@ -46,6 +51,8 @@ flutter:
     - assets/
     - assets/fonts/
     - assets/fonts/Inter/
+    - assets/images/
+    - assets/images/default_avatar.png
 
   fonts:
     - family: Inter
