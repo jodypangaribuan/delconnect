@@ -20,7 +20,7 @@
 <br />
 
 <p align="center">
-  <strong>Membangun komunitas dan memfasilitasi komunikasi antar individu di kampus Institut Teknologi Del.</strong>
+  <strong>Building a community and facilitating communication among individuals at the Del Institute of Technology campus.</strong>
 </p>
 
 ## Executive Summary
