@@ -23,6 +23,14 @@
   <strong>Building a community and facilitating communication among individuals at the Del Institute of Technology campus.</strong>
 </p>
 
+<br />
+
+<div align="center">
+  <img src="assets/649_1x_shots_so.png" alt="DelConnect App Mockup" width="100%" />
+</div>
+
+<br />
+
 ## Executive Summary
 
 **DelConnect** is an integrated mobile application (Android & iOS) designed specifically to build and facilitate communication within the Institut Teknologi Del community. This app allows users to share stories, interact in real-time, and manage their digital profiles using a scalable cloud backend architecture. It provides a modern, centralized, and seamless user experience for the entire academic community.
