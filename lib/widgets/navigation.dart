@@ -26,7 +26,6 @@ class SharedBottomNavigation extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          height: kBottomNavigationBarHeight,
           decoration: BoxDecoration(
             color: (isDark ? Colors.black : Colors.white).withOpacity(0.5),
             border: Border(

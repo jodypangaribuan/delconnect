@@ -560,232 +560,224 @@ class _HomeScreenState extends State<HomeScreen>
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     final isDark = themeProvider.isDark(context);
 
-    return StreamBuilder<QuerySnapshot>(
-      stream: PostService().getPosts(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return SliverToBoxAdapter(
-            child: Center(
-              child: Text(
-                'Error: ${snapshot.error}',
-                style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black,
-                ),
-              ),
-            ),
-          );
-        }
+    final List<Map<String, dynamic>> dummyPosts = [
+      {
+        'id': 'post1',
+        'userName': 'DelConnect Admin',
+        'userImage': 'https://picsum.photos/seed/user4/200/200',
+        'caption': 'Selamat datang di DelConnect! Mari kita saling terhubung 🚀',
+        'images': [
+          'https://picsum.photos/seed/post4/600/400',
+          'https://picsum.photos/seed/post5/600/400'
+        ],
+        'likes': ['user1', 'user2', 'user3', 'user4', 'user5'],
+        'timestamp': Timestamp.fromDate(DateTime.now().subtract(const Duration(minutes: 30))),
+      },
+      {
+        'id': 'post2',
+        'userName': 'Budi Santoso',
+        'userImage': 'https://picsum.photos/seed/user1/200/200',
+        'caption': 'Menikmati pemandangan alam yang sangat indah hari ini! #nature #peace',
+        'images': ['https://picsum.photos/seed/post1/600/400'],
+        'likes': ['user1', 'user2', 'user3'],
+        'timestamp': Timestamp.fromDate(DateTime.now().subtract(const Duration(hours: 2))),
+      },
+      {
+        'id': 'post3',
+        'userName': 'Siti Aminah',
+        'userImage': 'https://picsum.photos/seed/user2/200/200',
+        'caption': 'Ngopi pagi dulu biar semangat kerjanya ☕',
+        'images': ['https://picsum.photos/seed/post2/600/400'],
+        'likes': ['user1', 'user4'],
+        'timestamp': Timestamp.fromDate(DateTime.now().subtract(const Duration(hours: 5))),
+      },
+      {
+        'id': 'post4',
+        'userName': 'Andi Pratama',
+        'userImage': 'https://picsum.photos/seed/user3/200/200',
+        'caption': 'Waktu yang tepat untuk bersantai dan membaca buku favorit.',
+        'images': ['https://picsum.photos/seed/post3/600/400'],
+        'likes': ['user2'],
+        'timestamp': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 1))),
+      },
+    ];
 
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SliverToBoxAdapter(
-            child: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          final post = dummyPosts[index];
+          final likes = List<String>.from(post['likes'] ?? []);
+          final isLiked = false;
 
-        final posts = snapshot.data?.docs ?? [];
-
-        if (posts.isEmpty) {
-          return SliverToBoxAdapter(
-            child: Center(
-              child: Text(
-                'Belum ada postingan',
-                style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black,
-                ),
-              ),
-            ),
-          );
-        }
-
-        return SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final post = posts[index].data() as Map<String, dynamic>;
-              final postId = posts[index].id;
-              final likes = List<String>.from(post['likes'] ?? []);
-              final isLiked =
-                  likes.contains(FirebaseAuth.instance.currentUser?.uid);
-
-              return Container(
-                margin: const EdgeInsets.only(bottom: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // User Info
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 20,
-                            backgroundImage: post['userImage'] != null &&
-                                    post['userImage'].isNotEmpty
-                                ? NetworkImage(post['userImage'])
-                                : null,
-                            child: post['userImage'] == null ||
-                                    post['userImage'].isEmpty
-                                ? Text(post['userName'][0].toUpperCase())
-                                : null,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  post['userName'] ?? '',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white : Colors.black,
-                                  ),
-                                ),
-                                if (post['timestamp'] != null)
-                                  Text(
-                                    _getTimeAgo(post['timestamp'].toDate()),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color:
-                                          (isDark ? Colors.white : Colors.black)
-                                              .withOpacity(0.6),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              Iconsax.more,
-                              color: isDark ? Colors.white : Colors.black,
-                            ),
-                            onPressed: () {},
-                          ),
-                        ],
+          return Container(
+            margin: const EdgeInsets.only(bottom: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // User Info
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundImage: post['userImage'] != null &&
+                                post['userImage'].isNotEmpty
+                            ? NetworkImage(post['userImage'])
+                            : null,
+                        child: post['userImage'] == null ||
+                                post['userImage'].isEmpty
+                            ? Text(post['userName'][0].toUpperCase())
+                            : null,
                       ),
-                    ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              post['userName'] ?? '',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            if (post['timestamp'] != null)
+                              Text(
+                                _getTimeAgo(post['timestamp'].toDate()),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: (isDark ? Colors.white : Colors.black)
+                                      .withOpacity(0.6),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Iconsax.more,
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
+                        onPressed: () {},
+                      ),
+                    ],
+                  ),
+                ),
 
-                    const SizedBox(height: 12),
+                const SizedBox(height: 12),
 
-                    // Post Images
-                    if (post['images'] != null &&
-                        (post['images'] as List).isNotEmpty)
-                      SizedBox(
-                        height: 400,
-                        width: double.infinity,
-                        child: PageView.builder(
-                          itemCount: (post['images'] as List).length,
-                          itemBuilder: (context, imageIndex) {
-                            return Image.network(
-                              post['images'][imageIndex],
-                              fit: BoxFit.cover,
-                              loadingBuilder:
-                                  (context, child, loadingProgress) {
-                                if (loadingProgress == null) return child;
-                                return Center(
-                                  child: CircularProgressIndicator(
-                                    value: loadingProgress.expectedTotalBytes !=
-                                            null
-                                        ? loadingProgress
-                                                .cumulativeBytesLoaded /
-                                            loadingProgress.expectedTotalBytes!
-                                        : null,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      isDark ? Colors.white70 : Colors.black45,
-                                    ),
-                                  ),
-                                );
-                              },
-                              errorBuilder: (context, error, stackTrace) {
-                                debugPrint('Error loading image: $error');
-                                return Center(
-                                  child: Icon(
-                                    Icons.error_outline,
-                                    color: isDark
-                                        ? Colors.white60
-                                        : Colors.black45,
-                                    size: 32,
-                                  ),
-                                );
-                              },
+                // Post Images
+                if (post['images'] != null &&
+                    (post['images'] as List).isNotEmpty)
+                  SizedBox(
+                    height: 400,
+                    width: double.infinity,
+                    child: PageView.builder(
+                      itemCount: (post['images'] as List).length,
+                      itemBuilder: (context, imageIndex) {
+                        return Image.network(
+                          post['images'][imageIndex],
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  isDark ? Colors.white70 : Colors.black45,
+                                ),
+                              ),
                             );
                           },
+                          errorBuilder: (context, error, stackTrace) {
+                            debugPrint('Error loading image: $error');
+                            return Center(
+                              child: Icon(
+                                Icons.error_outline,
+                                color: isDark ? Colors.white60 : Colors.black45,
+                                size: 32,
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+
+                // Actions
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {}, // Dummy action
+                        child: Icon(
+                          isLiked ? Iconsax.heart5 : Iconsax.heart,
+                          color: isLiked
+                              ? Colors.red
+                              : (isDark ? Colors.white : Colors.black),
+                          size: 28,
                         ),
                       ),
+                      const SizedBox(width: 16),
+                      Icon(
+                        Iconsax.message,
+                        color: isDark ? Colors.white : Colors.black,
+                        size: 28,
+                      ),
+                      const SizedBox(width: 16),
+                      Icon(
+                        Iconsax.share,
+                        color: isDark ? Colors.white : Colors.black,
+                        size: 28,
+                      ),
+                    ],
+                  ),
+                ),
 
-                    // Actions
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
+                // Likes
+                if (likes.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      '${likes.length} suka',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
+                    ),
+                  ),
+
+                // Caption
+                if (post['caption'] != null && post['caption'].isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: RichText(
+                      text: TextSpan(
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black,
+                          fontSize: 14,
+                        ),
                         children: [
-                          GestureDetector(
-                            onTap: () => PostService().likePost(postId),
-                            child: Icon(
-                              isLiked ? Iconsax.heart5 : Iconsax.heart,
-                              color: isLiked
-                                  ? Colors.red
-                                  : (isDark ? Colors.white : Colors.black),
-                              size: 28,
-                            ),
+                          TextSpan(
+                            text: '${post['userName']} ',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          const SizedBox(width: 16),
-                          Icon(
-                            Iconsax.message,
-                            color: isDark ? Colors.white : Colors.black,
-                            size: 28,
-                          ),
-                          const SizedBox(width: 16),
-                          Icon(
-                            Iconsax.share,
-                            color: isDark ? Colors.white : Colors.black,
-                            size: 28,
-                          ),
+                          TextSpan(text: post['caption']),
                         ],
                       ),
                     ),
-
-                    // Likes
-                    if (likes.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          '${likes.length} suka',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black,
-                          ),
-                        ),
-                      ),
-
-                    // Caption
-                    if (post['caption'] != null && post['caption'].isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: RichText(
-                          text: TextSpan(
-                            style: TextStyle(
-                              color: isDark ? Colors.white : Colors.black,
-                              fontSize: 14,
-                            ),
-                            children: [
-                              TextSpan(
-                                text: '${post['userName']} ',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              TextSpan(text: post['caption']),
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              );
-            },
-            childCount: posts.length,
-          ),
-        );
-      },
+                  ),
+              ],
+            ),
+          );
+        },
+        childCount: dummyPosts.length,
+      ),
     );
   }
 
