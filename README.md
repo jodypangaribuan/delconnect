@@ -1,6 +1,7 @@
 <div align="center">
   <img src="assets/logo.png" alt="DelConnect Logo" width="250" />
   <h1>DelConnect</h1>
+  <p><strong>Building a community and facilitating communication among individuals at the Del Institute of Technology campus.</strong></p>
 </div>
 
 <div align="center">
@@ -16,12 +17,6 @@
   <img alt="Firebase" src="https://img.shields.io/badge/Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black" />
   <img alt="Supabase" src="https://img.shields.io/badge/Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white" />
 </div>
-
-<br />
-
-<p align="center">
-  <strong>Building a community and facilitating communication among individuals at the Del Institute of Technology campus.</strong>
-</p>
 
 <br />
 
